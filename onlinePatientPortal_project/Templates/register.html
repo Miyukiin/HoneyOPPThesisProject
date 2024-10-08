@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title> Registration Page </title>
+</head>
+<body>
+    <h1> Welcome to the Registration Page</h1>
+    <form action="/register/" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        
+        {% for field in form %}
+            {% for error in field.errors %}
+                <div class="error">{{ error }}</div>
+            {% endfor %}
+        {% endfor %}
+        
+        <input type="submit" value="Submit">
+    </form>
+    {% if messages %}
+    {% for message in messages %}
+        <div class="message">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+</body>
+</html>
