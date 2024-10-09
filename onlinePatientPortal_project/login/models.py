@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 import random
+from .utils import PasswordGeneration
 
 # Create your models here.
 class UserManager(BaseUserManager):
@@ -51,8 +52,5 @@ class HoneyPasswords(models.Model):
     index = models.ForeignKey(User, to_field= 'random_index', verbose_name=_("User"), on_delete=models.CASCADE)
     honeyPasswords = models.JSONField(default=list)
     
-    def generate_honey_password(self):
-        pass
-    
     def __str__(self):
-        return f"Password entry for {self.user.username}"
+        return f"Honeypasswords for {self.user.username} are {self.honeyPasswords}"

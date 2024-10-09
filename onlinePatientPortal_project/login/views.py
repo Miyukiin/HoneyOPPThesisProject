@@ -22,14 +22,14 @@ def login_user(request):
                 user = models.User.objects.get(username=username, password=password)
                 login(request, user)  # Use Django's login method to log the user in
                 messages.success(request, "Login successful! Redirecting")
-                return redirect('logout page') 
+                return redirect('logout/') 
             except models.User.DoesNotExist:
                 form.add_error(None, "Invalid username or password")
     
     else:
         form = LoginForm()
         
-    return render(request, './login.html', {'form': form}) 
+    return render(request, 'login.html', {'form': form}) 
 
 def register_user(request):
     if request.method == 'POST':
@@ -42,11 +42,11 @@ def register_user(request):
             new_user.save()
             messages.success(request, "Registration successful! You can now log in.")
             
-        return redirect('login page') 
+        return redirect('login/') 
     else:
         form = RegistrationForm()
         
-    return render(request, './register.html', {'form': form})
+    return render(request, 'register.html', {'form': form})
 
 @login_required
 def greetings(request): 
@@ -54,5 +54,5 @@ def greetings(request):
         username = request.user.get_username()
     else:
         username = "Guest"
-    return render(request, './logout.html', {'username': username})
+    return render(request, 'logout.html', {'username': username})
         
