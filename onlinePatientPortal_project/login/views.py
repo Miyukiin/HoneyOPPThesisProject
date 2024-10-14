@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 
 from . import models
 from .Forms import *
+from .utils import *
 
 
 # Create your views here.

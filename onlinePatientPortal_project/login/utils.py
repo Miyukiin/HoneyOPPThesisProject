@@ -1,36 +1,148 @@
 import random
-from typing import List
+from typing import List, Tuple
 from Levenshtein import distance as levenshtein_distance  # Requires python-Levenshtein package
 import numpy as np
+from PyDictionary import PyDictionary
+import string
+
+dictionary = PyDictionary()
+
+def is_word_in_dictionary(word):
+    meaning = dictionary.meaning(word)  
+    if meaning: 
+        return True
+    else:
+        return False
+
+
 
 class PasswordGeneration:
     def __init__(self, threshold_levenshtein: int, threshold_euclidean: float, sugarword: str):
         self.threshold_levenshtein = threshold_levenshtein
         self.threshold_euclidean = threshold_euclidean
         self.sugarword = sugarword
+        self.num = 5 # Number of sweetwords denoted by k-1 where k is the amount of honeywords
         
-        # Define keyboard layout positions (x, y)
+        # Define keyboard layout positions (x, y) by row for QWERTY keyboard
         self.keyboard_layout = {
-            'q': (0, 0), 'w': (1, 0), 'e': (2, 0), 'r': (3, 0), 't': (4, 0), 'y': (5, 0), 'u': (6, 0), 'i': (7, 0), 'o': (8, 0), 'p': (9, 0),
-            'a': (0, 1), 's': (1, 1), 'd': (2, 1), 'f': (3, 1), 'g': (4, 1), 'h': (5, 1), 'j': (6, 1), 'k': (7, 1), 'l': (8, 1),
-            'z': (0, 2), 'x': (1, 2), 'c': (2, 2), 'v': (3, 2), 'b': (4, 2), 'n': (5, 2), 'm': (6, 2),
-            ' ': (0, 3)  # Space character for completeness
+            # Row 1: Top row (Numbers and symbols)
+            '`': (1, 1),'1': (0, 0), '2': (1, 0), '3': (2, 0), '4': (3, 0), '5': (4, 0), '6': (5, 0), '7': (6, 0), '8': (7, 0), '9': (8, 0), '0': (9, 0),
+            '~': (0, 1),'!': (0, 0), '@': (1, 0), '#': (2, 0), '$': (3, 0), '%': (4, 0), '^': (5, 0), '&': (6, 0), '*': (7, 0), '(': (8, 0), ')': (9, 0),
+            
+            # Row 2: QWERTY row
+            'q': (0, 1), 'w': (1, 1), 'e': (2, 1), 'r': (3, 1), 't': (4, 1), 'y': (5, 1), 'u': (6, 1), 'i': (7, 1), 'o': (8, 1), 'p': (9, 1), '-': (10, 1), '=': (11, 1),
+            'Q': (0, 1), 'W': (1, 1), 'E': (2, 1), 'R': (3, 1), 'T': (4, 1), 'Y': (5, 1), 'U': (6, 1), 'I': (7, 1), 'O': (8, 1), 'P': (9, 1), '_': (10, 1), '+': (11, 1),
+            
+            # Row 3: Home row
+            'a': (0, 2), 's': (1, 2), 'd': (2, 2), 'f': (3, 2), 'g': (4, 2), 'h': (5, 2), 'j': (6, 2), 'k': (7, 2), 'l': (8, 2), ';': (9, 2), "'": (10, 2),
+            'A': (0, 2), 'S': (1, 2), 'D': (2, 2), 'F': (3, 2), 'G': (4, 2), 'H': (5, 2), 'J': (6, 2), 'K': (7, 2), 'L': (8, 2), ':': (9, 2), '"': (10, 2),
+            
+            # Row 4: Bottom row
+            'z': (0, 3), 'x': (1, 3), 'c': (2, 3), 'v': (3, 3), 'b': (4, 3), 'n': (5, 3), 'm': (6, 3), ',': (7, 3), '.': (8, 3), '/': (9, 3),
+            'Z': (0, 3), 'X': (1, 3), 'C': (2, 3), 'V': (3, 3), 'B': (4, 3), 'N': (5, 3), 'M': (6, 3), '<': (7, 3), '>': (8, 3), '?': (9, 3),
+            
+            # Row 5: Space bar and other keys
+            ' ': (4, 4), '\\': (11, 3), '|': (11, 3)
         }
+    
+    def tokenize(self) -> Tuple[List[str], List[str], List[str]]: # L3GendtyouSer4!rE4l2%7*
+        def process_word(lexeme_string):
+            while len(lexeme_string) > 1:
+                temp_lexeme_string = "" # gendtyouser is our lexeme_string  
+                count = 0
+                
+                for char in lexeme_string: # We continuously check by going through the lexeme_string to see if we get a word.
+                    temp_lexeme_string += char
+                    count += 1
+                    if is_word_in_dictionary(temp_lexeme_string) and len(temp_lexeme_string) > 1:
+                        token_list.append({temp_lexeme_string:"Word"})
+                        temp_lexeme_string = "" 
+                        lexeme_string = lexeme_string[count:]
+                        count = 0
+                        break
+                    
+                if temp_lexeme_string == lexeme_string:
+                    token_list.append({lexeme_string[0]:"Letter"})
+                    lexeme_string = lexeme_string[1:]
+                    
+            if lexeme_string == 1:
+                token_list.append({lexeme_string:"Letter"})
+                lexeme_string, type = "", ""
+            
+        before_password = self.sugarword
+        token_list = [] # Letter, Word, Numbers, Special Character
+        lexeme_string = ""
+        type = "empty"
+        
+        capital_index = []
+        for i in range(len(before_password)): # Get the indexes where the capitalization occurs.
+            if before_password[i].isupper():
+                capital_index.append(i)
+        
+        lowercase_password = before_password.lower() # l3gendtyouser4!re4l2%7*
+    
+        for i in range(len(lowercase_password)): # Parse the password and tokenize
+            if lowercase_password[i].isalpha():
+                lexeme_string += lowercase_password[i]
+                if type == "1": # if it is the first character of the string.
+                    type = "String"
+                elif i == (len(lowercase_password)-1):
+                    token_list.append({lexeme_string:"Word"})
+                    lexeme_string, type = "", ""
+            elif lowercase_password[i].isnumeric():
+                if type == "1":
+                    type = "Digit"
+                elif len(lexeme_string) > 2 and lexeme_string.isalpha(): # We have a lexeme_string, and we reached a digit. But we don't know if there are words.
+                    process_word(lexeme_string)
+                    lexeme_string, type = lowercase_password[i], "Digit"
+                elif len(lexeme_string) == 1 and lexeme_string.isalpha(): # This is a single letter in the lexeme_string. We append and reset.
+                    token_list.append({lexeme_string:"Letter"})
+                    lexeme_string, type = lowercase_password[i], "Digit"
+                else: # Handle digit case.
+                    lexeme_string, type = lowercase_password[i], "Digit"
+                token_list.append({lexeme_string:type})
+                lexeme_string, type = "", ""
+            elif lowercase_password[i] in string.punctuation:
+                lexeme_string += lowercase_password[i]
+                if type == "1":
+                    type = "Symbol"
+                elif len(lexeme_string) > 2 and lexeme_string.isalpha(): # We have a lexeme_string, and we reached a Symbol. But we don't know if there are words.
+                    process_word(lexeme_string)
+                    lexeme_string, type = lowercase_password[i], "Symbol"
+                elif lexeme_string == 1 and lexeme_string.isalpha(): # This is not a word. We append and reset.
+                    token_list.append({lexeme_string:"Letter"})
+                    lexeme_string = lowercase_password[i]
+                    type = "Symbol"
+                else: # Handle symbol case
+                    lexeme_string, type = lowercase_password[i], "Symbol"
+                token_list.append({lexeme_string:type})
+                lexeme_string, type = "", ""
+                
+        print(token_list)
+                
+        
+ 
 
     def generate_sweetwords(self, password: str) -> List[str]:
         sweetwords = []
-        for _ in range(5):  # Generate 5 sweetwords
+        for _ in range(self.num): 
+            
             tail = str(random.randint(100, 999))  # Random tail for demonstration
             sweetword = f"{password}{tail}"  # Combine password with tail
             sweetwords.append(sweetword)
         return sweetwords
 
-    def euclidean_distance(self, char1: str, char2: str) -> float:
-        # Get positions from keyboard layout
-        pos1 = self.keyboard_layout.get(char1.lower(), (0, 0))
-        pos2 = self.keyboard_layout.get(char2.lower(), (0, 0))
-        # Calculate Euclidean distance
-        return np.sqrt((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2)
+    def manhattan_distance(char1: str, char2: str, keyboard_layout: dict) -> float:
+        if char1 in keyboard_layout and char2 in keyboard_layout:
+            # Get coordinates of each character
+            x1, y1 = keyboard_layout[char1]
+            x2, y2 = keyboard_layout[char2]
+            
+            # Calculate Manhattan distance
+            return abs(x2 - x1) + abs(y2 - y1)
+        else:
+            # If character not found in layout, return an infinite distance
+            return float('inf')
 
     def assess_passwords(self, password: str) -> List[str]:
         sweetwords = self.generate_sweetwords(password)
@@ -44,3 +156,7 @@ class PasswordGeneration:
                 valid_sweetwords.append(sweetword)
         
         return valid_sweetwords
+
+if __name__ == "__main__":
+    generate = PasswordGeneration(1,1.0,"l3gendtyouser")
+    generate.tokenize()
