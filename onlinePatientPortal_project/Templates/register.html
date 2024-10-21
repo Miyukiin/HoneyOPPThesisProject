@@ -1,27 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="stylesheet" href="/static/css/styles-register.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&display=swap" rel="stylesheet">
+    <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="static/img/logo.png">
     <title> Registration Page </title>
 </head>
 <body>
-    <h1> Welcome to the Registration Page</h1>
-    <form action="/register/" method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        
-        {% for field in form %}
-            {% for error in field.errors %}
-                <div class="error">{{ error }}</div>
-            {% endfor %}
-        {% endfor %}
-        
-        <input type="submit" value="Submit">
-    </form>
-    {% if messages %}
-    {% for message in messages %}
-        <div class="message">{{ message }}</div>
-    {% endfor %}
-    {% endif %}
+    <div class="register-container">
+        <div class="register-box">
+            <div class = "register-logo-header">
+                <img src="/static/img/logo5.png" width="200">
+            </div>
+            <h2 class="register-header"> Registration</h2>
+            <form action="#" method="post" class="register-form">
+                {% csrf_token %}
+                {{ form }}
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <div class="error">{{ error }}</div>
+                    {% endfor %}
+                {% endfor %}
+                <input type="submit" value="Register" class="register-button">
+                <p class="register-login"> Already have an account?<a href="/login/" id="register-login-id">Login!</a></p>
+            </form>
+            <p class="register-quote"> - Join us in health-</p>
+        </div>
+        <div class="register-banner"></div>
+    </div>
+    
 </body>
 </html>

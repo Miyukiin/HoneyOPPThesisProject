@@ -3,6 +3,9 @@ from django.contrib.auth import authenticate, login
 from django.shortcuts import redirect, render
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout
+
+
 
 from . import models
 from .Forms import *
@@ -23,7 +26,7 @@ def login_user(request):
                 user = models.User.objects.get(username=username, password=password)
                 login(request, user)  # Use Django's login method to log the user in
                 messages.success(request, "Login successful! Redirecting")
-                return redirect('logout/') 
+                return redirect('/greetings/') 
             except models.User.DoesNotExist:
                 form.add_error(None, "Invalid username or password")
     
@@ -43,7 +46,7 @@ def register_user(request):
             new_user.save()
             messages.success(request, "Registration successful! You can now log in.")
             
-        return redirect('login/') 
+        return redirect('/') 
     else:
         form = RegistrationForm()
         
@@ -55,5 +58,9 @@ def greetings(request):
         username = request.user.get_username()
     else:
         username = "Guest"
-    return render(request, 'logout.html', {'username': username})
-        
+    return render(request, 'greetings.html', {'username': username})
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('/login/') 

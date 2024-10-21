@@ -1,28 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="stylesheet" href="/static/css/styles-login.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&display=swap" rel="stylesheet">
+    <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="static/img/logo.png">
     <title> Login Page </title>
 </head>
 <body>
-    <h1> Welcome to the Login Page</h1>
-    <p> Not logged in?<a href="/register/">Register</a></p>
-    <form action="" method="post">
-        {% csrf_token %}
-        {{ form.as_p }}  <!-- This will render the form fields with paragraph tags -->
-        
-        {% for field in form %}
-            {% for error in field.errors %}
-                <div class="error">{{ error }}</div>  <!-- Display errors for each field -->
-            {% endfor %}
-        {% endfor %}
-        
-        <input type="submit" value="Submit">
-    </form>
-    {% if messages %}
-    {% for message in messages %}
-        <div class="message">{{ message }}</div>
-    {% endfor %}
-    {% endif %}
+    <div class="login-container">
+        <div class="login-box">
+            <div class = "login-logo-header">
+                <img src="/static/img/logo5.png" width="200">
+            </div>
+            <h2 class="login-header"> Login</h2>
+            <form action="" method="post" class="login-form">
+                {% csrf_token %}
+                {{ form }}
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <div class="error">{{ error }}</div>
+                    {% endfor %}
+                {% endfor %}
+                <div class="login-options">
+                    <a href="#">Forgot Password?</a>
+                </div>
+                <input type="submit" value="Login" class="login-button">
+                <p class="login-register"> Don't have an account?<a href="/register/" id="login-register-id">Register Now!</a></p>
+            </form>
+            <p class="login-quote"> - Your Health, Your Wealth -</p>
+
+        </div>
+        <div class="login-banner"></div>
+    </div>
+    
 </body>
 </html>

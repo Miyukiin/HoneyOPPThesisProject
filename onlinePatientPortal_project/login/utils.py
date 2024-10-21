@@ -14,9 +14,7 @@ def is_word_in_dictionary(word):
     else:
         return False
 
-
-
-class PasswordGeneration:
+class ProposedPasswordGeneration:
     def __init__(self, threshold_levenshtein: int, threshold_euclidean: float, sugarword: str):
         self.threshold_levenshtein = threshold_levenshtein
         self.threshold_euclidean = threshold_euclidean
@@ -156,7 +154,13 @@ class PasswordGeneration:
                 valid_sweetwords.append(sweetword)
         
         return valid_sweetwords
+    
+class ExistingPasswordGeneration:
+    def __init__(self):
+        pass
 
 if __name__ == "__main__":
-    generate = PasswordGeneration(1,1.0,"l3gendtyouser")
+    generate = ProposedPasswordGeneration(1,1.0,"l3gendtyouser")
     generate.tokenize()
+    
+    

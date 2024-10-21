@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title> Results Page </title>
+</head>
+<body>
+    {% if user.is_authenticated %}
+
+    <h1> Welcome {{username}},</h1>
+    {%else%}
+    <h1>Not Authenticated</h1>
+    {%endif%}
+    {% if result %}
+        <h1> {{result}} </h1>
+    {% else %}
+        <h1> No Result </h1>
+    {% endif %}
+
+    <form action="" method="post">
+        {% csrf_token %}
+        <button type="submit">Log Out</button>
+    </form>
+    
+</body>
+</html>
