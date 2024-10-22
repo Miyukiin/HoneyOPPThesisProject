@@ -21,19 +21,19 @@ def login_user(request):
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
             
-            # Manually checking the username and password
-            try:
-                user = models.User.objects.get(username=username, password=password)
-                login(request, user)  # Use Django's login method to log the user in
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
                 messages.success(request, "Login successful! Redirecting")
-                return redirect('/greetings/') 
-            except models.User.DoesNotExist:
+                return redirect('/index/') 
+            
+            else:
                 form.add_error(None, "Invalid username or password")
-    
     else:
         form = LoginForm()
         
     return render(request, 'login.html', {'form': form}) 
+
 
 def register_user(request):
     if request.method == 'POST':
@@ -52,8 +52,9 @@ def register_user(request):
         
     return render(request, 'register.html', {'form': form})
 
+
 @login_required
-def greetings(request): 
+def home_page(request): 
     if request.user.is_authenticated:
         username = request.user.get_username()
     else:
