@@ -90,7 +90,8 @@ DATABASES = {
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
-AUTH_USER_MODEL = 'login.User'  # Replace 'yourapp' with the actual name of your app
+AUTH_USER_MODEL = 'login.CustomUser'
+
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  # Default backend
 ]

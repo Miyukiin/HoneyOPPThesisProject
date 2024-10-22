@@ -3,9 +3,7 @@ from django.contrib.auth import authenticate, login
 from django.shortcuts import redirect, render
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import logout
-
-
+from django.contrib.auth import logout, get_user_model
 
 from . import models
 from .Forms import *
@@ -21,10 +19,11 @@ def login_user(request):
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
             
+            print(username,password)
             user = authenticate(request, username=username, password=password)
+            print(user)
             if user is not None:
                 login(request, user)
-                messages.success(request, "Login successful! Redirecting")
                 return redirect('/index/') 
             
             else:
@@ -38,15 +37,24 @@ def login_user(request):
 def register_user(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
+    
         if form.is_valid():
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
-            new_user = models.User(username=username)
-            new_user.password = password
-            new_user.save()
-            messages.success(request, "Registration successful! You can now log in.")
+            email = form.cleaned_data['email']
             
-        return redirect('/') 
+            if get_user_model().objects.filter(username=username).exists():
+                form.add_error('username', "Username already used.")
+            if get_user_model().objects.filter(email=email).exists():
+                form.add_error('email', "Email already used.")
+                
+            if not form.errors:
+                user = get_user_model().objects.create_user(
+                    username=username, 
+                    email=email, 
+                    password=password
+                )
+                return redirect('/login/') 
     else:
         form = RegistrationForm()
         
@@ -55,11 +63,8 @@ def register_user(request):
 
 @login_required
 def home_page(request): 
-    if request.user.is_authenticated:
-        username = request.user.get_username()
-    else:
-        username = "Guest"
-    return render(request, 'greetings.html', {'username': username})
+    username = request.user.get_username() if request.user.is_authenticated else "Guest"
+    return render(request, 'index.html', {'username': username})
 
 
 def logout_view(request):

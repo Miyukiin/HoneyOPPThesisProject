@@ -1,4 +1,5 @@
 from django import forms
+from login.models import CustomUser
 
 class LoginForm(forms.Form):
     username = forms.CharField(
@@ -20,11 +21,21 @@ class LoginForm(forms.Form):
         )
     )
     
+    
 class RegistrationForm(forms.Form):
+    email = forms.EmailField(
+        label=False,
+        widget=forms.EmailInput(
+            attrs={
+            'class': 'register-form-email',
+            'placeholder': 'Email',
+            }
+        )
+    )
     username = forms.CharField(
-    label=False, 
-    max_length=50,  
-    widget=forms.TextInput(
+        label=False, 
+        max_length=50,  
+        widget=forms.TextInput(
             attrs={'class': 'register-form-username', 
                     'placeholder': 'Username',
             }
@@ -39,3 +50,4 @@ class RegistrationForm(forms.Form):
             }
         )
     )
+    
