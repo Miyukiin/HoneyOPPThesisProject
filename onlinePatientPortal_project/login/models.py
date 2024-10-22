@@ -30,10 +30,12 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(_("Username"), max_length=50, unique=True)
+    email = models.EmailField(_("Email"), unique=True)
     password = models.CharField(_("Password"), max_length=128)
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
     last_modified = models.DateTimeField(_("Last Modified"), auto_now=True)
     random_index = models.IntegerField(_("Random Index"), unique=True, null=True, blank=True)
+    
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -66,3 +68,4 @@ class HoneyPasswords(models.Model):
     
     def __str__(self):
         return f"Honeypasswords for {self.user.username} are {self.honeyPasswords}"
+    
