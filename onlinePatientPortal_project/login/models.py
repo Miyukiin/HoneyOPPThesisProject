@@ -81,5 +81,6 @@ class HoneyPasswords(models.Model):
     honeyPasswords = models.JSONField(default=list)
     
     def __str__(self):
-        return f"Honeypasswords for {self.user.username} are {self.honeyPasswords}"
+        honey_passwords_list = ', '.join([str(password) for password in self.honeyPasswords])
+        return f"Honeypasswords for {self.index.username} are [{honey_passwords_list}]"
     

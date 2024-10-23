@@ -1,5 +1,4 @@
 import random
-from typing import List, Tuple
 from Levenshtein import distance as levenshtein_distance  # Requires python-Levenshtein package
 import numpy as np
 from PyDictionary import PyDictionary
@@ -43,7 +42,7 @@ class ProposedPasswordGeneration:
             ' ': (4, 4), '\\': (11, 3), '|': (11, 3)
         }
     
-    def tokenize(self) -> Tuple[List[str], List[str], List[str]]: # L3GendtyouSer4!rE4l2%7*
+    def tokenize(self) -> tuple[list[str], list[str], list[str]]: # L3GendtyouSer4!rE4l2%7*
         def process_word(lexeme_string):
             while len(lexeme_string) > 1:
                 temp_lexeme_string = "" # gendtyouser is our lexeme_string  
@@ -121,7 +120,7 @@ class ProposedPasswordGeneration:
         
  
 
-    def generate_sweetwords(self, password: str) -> List[str]:
+    def generate_sweetwords(self, password: str) -> list[str]:
         sweetwords = []
         for _ in range(self.num): 
             
@@ -142,7 +141,7 @@ class ProposedPasswordGeneration:
             # If character not found in layout, return an infinite distance
             return float('inf')
 
-    def assess_passwords(self, password: str) -> List[str]:
+    def assess_passwords(self, password: str) -> list[str]:
         sweetwords = self.generate_sweetwords(password)
         valid_sweetwords = []
         
@@ -156,11 +155,50 @@ class ProposedPasswordGeneration:
         return valid_sweetwords
     
 class ExistingPasswordGeneration:
-    def __init__(self):
-        pass
+    def __init__(self, password:str):
+        self.password = password
+        self.num_of_honeywords = 5 # How many honeywords to be generated? E.g 5 honeywords -> 4 sweet words, 1 sugar word.
+        self.alphabet_upper_list = list(string.ascii_uppercase)
+        self.alphabet_lower_list = list(string.ascii_lowercase)
+        self.symbol_list = list(string.punctuation)
+        self.digit_list =  list(string.digits)
+        self.honeyword_list = []
+    
+    def choose_replacement_character(self, character: str) -> str:
+        if character.isdigit():
+            return str(random.choice(self.digit_list))
+        elif character.isalpha():
+            if character.isupper():
+                return str(random.choice(self.alphabet_upper_list))
+            else:
+                return str(random.choice(self.alphabet_lower_list))
+        else:
+            return str(random.choice(self.symbol_list))
+    
+    def choose_method(self, choice: int):
+        match choice:
+            case 1: # Chaffing by Tail-Tweaking
+                self.num_of_tweaks = 2 # How many characters from the end will be tweaked.
+                while len(self.honeyword_list) < 4: # Generate 4 sweet words
+                    self.password_list:list[str] = [*self.password]
+                    for i in range(self.num_of_tweaks):
+                        self.password_list[len(self.password_list)-(i+1)] = self.choose_replacement_character(self.password_list[len(self.password_list)-(i+1)])
+                    if not self.honeyword_list or self.password_list not in self.honeyword_list:
+                        self.honeyword_list.append("".join(self.password_list))
+                self.honeyword_list.append(self.password) # Append sweetword
+                random.shuffle(self.honeyword_list) # Randomize positions
+                return self.honeyword_list
+            case 2: # Take-a-tail
+                return
+            case 3: # Tough nuts
+                return
+            case 4: # Password-model without chaffing
+                return
+            
+        
 
 if __name__ == "__main__":
-    generate = ProposedPasswordGeneration(1,1.0,"l3gendtyouser")
-    generate.tokenize()
+    instance = ExistingPasswordGeneration("henl12oY#")
+    print(instance.choose_method(1))
     
     
