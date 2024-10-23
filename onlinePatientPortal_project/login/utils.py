@@ -156,7 +156,7 @@ class ProposedPasswordGeneration:
     
 class ExistingPasswordGeneration:
     def __init__(self, password:str):
-        self.password = password
+        self.password:str = password
         self.num_of_honeywords = 5 # How many honeywords to be generated? E.g 5 honeywords -> 4 sweet words, 1 sugar word.
         self.alphabet_upper_list = list(string.ascii_uppercase)
         self.alphabet_lower_list = list(string.ascii_lowercase)
@@ -182,23 +182,49 @@ class ExistingPasswordGeneration:
                 while len(self.honeyword_list) < 4: # Generate 4 sweet words
                     self.password_list:list[str] = [*self.password]
                     for i in range(self.num_of_tweaks):
-                        self.password_list[len(self.password_list)-(i+1)] = self.choose_replacement_character(self.password_list[len(self.password_list)-(i+1)])
+                        self.password_list[len(self.password_list)-(i+1)] = (
+                            self.choose_replacement_character(self.password_list[len(self.password_list)-(i+1)])
+                        )
+                    # Do if list is empty, or if current sweetword is not already in honeyword list.
                     if not self.honeyword_list or self.password_list not in self.honeyword_list:
                         self.honeyword_list.append("".join(self.password_list))
                 self.honeyword_list.append(self.password) # Append sweetword
                 random.shuffle(self.honeyword_list) # Randomize positions
                 return self.honeyword_list
+            
             case 2: # Take-a-tail
-                return
+                self.num_of_tail_char = 3 # How many digits do you like to append to your password?
+                self.password_list:list[str] = [*self.password]
+                
+                for i in range(self.num_of_tail_char): # Append digits of length num_of_tail_char
+                    self.password_list.append(random.choice(self.digit_list))
+                
+                self.password:str = "".join(self.password_list) # Replace password with the appended password
+                
+                while len(self.honeyword_list) < 4: # Generate 4 sweet words
+                    self.password_list:list[str] = [*self.password]
+                    for i in range(self.num_of_tail_char):
+                        self.password_list[len(self.password_list)-(i+1)] = (
+                            self.choose_replacement_character(self.password_list[len(self.password_list)-(i+1)])
+                        )
+                    # Do if list is empty, or if current sweetword is not already in honeyword list.
+                    if not self.honeyword_list or self.password_list not in self.honeyword_list: 
+                        self.honeyword_list.append("".join(self.password_list))
+                self.honeyword_list.append(self.password) # Append sweetword
+                random.shuffle(self.honeyword_list) # Randomize positions
+                return self.honeyword_list
+                    
             case 3: # Tough nuts
                 return
             case 4: # Password-model without chaffing
                 return
+            case _:
+                raise Exception("Choose Method. Choice not in range.")
             
         
 
 if __name__ == "__main__":
     instance = ExistingPasswordGeneration("henl12oY#")
-    print(instance.choose_method(1))
+    print(instance.choose_method(2))
     
     

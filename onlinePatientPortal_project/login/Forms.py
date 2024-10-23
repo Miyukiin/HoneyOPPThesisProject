@@ -50,4 +50,13 @@ class RegistrationForm(forms.Form):
             }
         )
     )
+    confirm_password = forms.CharField(
+        label=False, 
+        widget=forms.PasswordInput(
+            attrs={
+            'class': 'register-form-password',
+            'placeholder': 'Password',
+            }
+        )
+    )
     
