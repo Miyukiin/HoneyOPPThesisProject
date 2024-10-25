@@ -3,6 +3,8 @@ from Levenshtein import distance as levenshtein_distance  # Requires python-Leve
 import numpy as np
 from PyDictionary import PyDictionary
 import string
+from pathlib import Path
+
 
 dictionary = PyDictionary()
 
@@ -179,7 +181,8 @@ class ExistingPasswordGeneration:
         match choice:
             case 1: # Chaffing by Tail-Tweaking
                 self.num_of_tweaks = 2 # How many characters from the end will be tweaked.
-                while len(self.honeyword_list) < 4: # Generate 4 sweet words
+                
+                while len(self.honeyword_list) < self.num_of_honeywords - 1: # Generate 4 sweet words
                     self.password_list:list[str] = [*self.password]
                     for i in range(self.num_of_tweaks):
                         self.password_list[len(self.password_list)-(i+1)] = (
@@ -188,6 +191,7 @@ class ExistingPasswordGeneration:
                     # Do if list is empty, or if current sweetword is not already in honeyword list.
                     if not self.honeyword_list or self.password_list not in self.honeyword_list:
                         self.honeyword_list.append("".join(self.password_list))
+                        
                 self.honeyword_list.append(self.password) # Append sweetword
                 random.shuffle(self.honeyword_list) # Randomize positions
                 return self.honeyword_list
@@ -201,7 +205,7 @@ class ExistingPasswordGeneration:
                 
                 self.password:str = "".join(self.password_list) # Replace password with the appended password
                 
-                while len(self.honeyword_list) < 4: # Generate 4 sweet words
+                while len(self.honeyword_list) < self.num_of_honeywords - 1: # Generate 4 sweet words
                     self.password_list:list[str] = [*self.password]
                     for i in range(self.num_of_tail_char):
                         self.password_list[len(self.password_list)-(i+1)] = (
@@ -210,21 +214,34 @@ class ExistingPasswordGeneration:
                     # Do if list is empty, or if current sweetword is not already in honeyword list.
                     if not self.honeyword_list or self.password_list not in self.honeyword_list: 
                         self.honeyword_list.append("".join(self.password_list))
+                        
                 self.honeyword_list.append(self.password) # Append sweetword
                 random.shuffle(self.honeyword_list) # Randomize positions
                 return self.honeyword_list
                     
-            case 3: # Tough nuts
-                return
-            case 4: # Password-model without chaffing
-                return
+            case 3: # Chaffing with a Password-model
+                file_path = Path.cwd() / 'login' / 'static' / 'password_list.txt'
+                with file_path.open('r', encoding='utf-8', errors='ignore') as file:
+                    wordlist = [line.strip() for line in file]
+                    
+                while len(self.honeyword_list) < self.num_of_honeywords - 1:
+                    self.random_password:str = random.choice(wordlist)
+                    
+                    # Do if list is empty, or if current sweetword is not already in honeyword list.
+                    if not self.honeyword_list or self.random_password not in self.honeyword_list: 
+                        self.honeyword_list.append("".join(self.random_password))
+                        
+                self.honeyword_list.append(self.password) # Append sweetword
+                random.shuffle(self.honeyword_list) # Randomize positions
+                return self.honeyword_list
             case _:
                 raise Exception("Choose Method. Choice not in range.")
             
-        
-
+    
 if __name__ == "__main__":
     instance = ExistingPasswordGeneration("henl12oY#")
-    print(instance.choose_method(2))
+    print(instance.choose_method(3))
+    
+   
     
     
