@@ -4,7 +4,6 @@
     <link rel="stylesheet" href="/static/css/styles-login.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&display=swap" rel="stylesheet">
     <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,7 +29,7 @@
                     <a href="#">Forgot Password?</a>
                 </div>
                 <input type="submit" value="Login" class="login-button">
-                <p class="login-register"> Don't have an account?<a href="/register/" id="login-register-id">Register Now!</a></p>
+                <p class="login-register"> Don't have an account?<a href="{% url 'register' %}" id="login-register-id">Register Now!</a></p>
             </form>
             <p class="login-quote"> - Your Health, Your Wealth -</p>
 

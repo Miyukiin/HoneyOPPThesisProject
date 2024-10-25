@@ -87,6 +87,11 @@ DATABASES = {
     }
 }
 
+LOGIN_URL = '/login/'  # The URL to access the login page
+LOGIN_REDIRECT_URL = '/dashboard/'  # Where users go after logging in
+LOGOUT_URL = '/logout/'  # The URL to access the logout page 
+LOGOUT_REDIRECT_URL = '/login/'  # Where users go after logging out
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

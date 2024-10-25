@@ -4,7 +4,6 @@
     <link rel="stylesheet" href="/static/css/styles-register.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&display=swap" rel="stylesheet">
     <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,7 +26,7 @@
                     {% endfor %}
                 {% endfor %}
                 <input type="submit" value="Register" class="register-button">
-                <p class="register-login"> Already have an account?<a href="/login/" id="register-login-id">Login!</a></p>
+                <p class="register-login"> Already have an account?<a href="{% url 'login' %}" id="register-login-id">Login!</a></p>
             </form>
             <p class="register-quote"> - Join us in health-</p>
         </div>

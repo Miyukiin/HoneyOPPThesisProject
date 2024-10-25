@@ -55,7 +55,7 @@ class RegistrationForm(forms.Form):
         widget=forms.PasswordInput(
             attrs={
             'class': 'register-form-password',
-            'placeholder': 'Password',
+            'placeholder': 'Confirm Your Password',
             }
         )
     )

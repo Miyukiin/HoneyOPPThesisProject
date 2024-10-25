@@ -1,6 +1,7 @@
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, HttpRequest
 from django.contrib.auth import authenticate, login
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout, get_user_model
@@ -12,19 +13,20 @@ from .utils import *
 
 # Create your views here.
 
-def login_user(request):
+def login_view(request: HttpRequest):
+    if request.user.is_authenticated:
+        dashboard_view(request)
+    
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
             
-            print(username,password)
             user = authenticate(request, username=username, password=password)
-            print(user)
             if user is not None:
                 login(request, user)
-                return redirect('/index/') 
+                return redirect(reverse('dashboard'))
             
             else:
                 form.add_error(None, "Invalid username or password")
@@ -34,7 +36,10 @@ def login_user(request):
     return render(request, 'login.html', {'form': form}) 
 
 
-def register_user(request):
+def register_view(request:HttpRequest):
+    if request.user.is_authenticated:
+        dashboard_view(request)
+    
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
     
@@ -54,19 +59,24 @@ def register_user(request):
                     email=email, 
                     password=password
                 )
-                return redirect('/login/') 
+                return redirect(reverse('login'))
     else:
         form = RegistrationForm()
         
     return render(request, 'register.html', {'form': form})
 
+def redirect_view(request:HttpRequest):
+    if request.user.is_authenticated:
+        return redirect(reverse('dashboard'))
+    else:
+        return redirect(reverse('login'))
 
 @login_required
-def home_page(request): 
-    username = request.user.get_username() if request.user.is_authenticated else "Guest"
+def dashboard_view(request:HttpRequest): 
+    username = request.user.get_username()
     return render(request, 'index.html', {'username': username})
 
-
-def logout_view(request):
+@login_required
+def logout_view(request:HttpRequest):
     logout(request)
-    return redirect('/login/') 
+    return redirect(reverse('login'))
