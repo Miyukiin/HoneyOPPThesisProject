@@ -166,13 +166,12 @@ class ExistingPasswordGeneration:
         self.digit_list =  list(string.digits)
         self.honeyword_list = []
     
-    def is_unique(self, honeyword):
+    def is_unique_or_list_empty(self, honeyword):
         if not self.honeyword_list or honeyword not in self.honeyword_list:
             return True
         else:
             return False
         
-    
     def choose_replacement_character(self, character: str) -> str:
         if character.isdigit():
             return str(random.choice(self.digit_list))
@@ -199,7 +198,7 @@ class ExistingPasswordGeneration:
                         )
                         
                     self.possible_sweetword = "".join(self.password_characters)
-                    if self.is_unique(self.possible_sweetword):
+                    if self.is_unique_or_list_empty(self.possible_sweetword):
                         self.honeyword_list.append(self.possible_sweetword)
                         
                 self.honeyword_list.append(self.password) # Append sugarword
@@ -224,7 +223,7 @@ class ExistingPasswordGeneration:
                         )
                         
                     self.possible_sweetword = "".join(self.password_characters)
-                    if self.is_unique(self.possible_sweetword):
+                    if self.is_unique_or_list_empty(self.possible_sweetword):
                         self.honeyword_list.append(self.possible_sweetword)
                         
                 self.honeyword_list.append(self.appended_password) # Append sugarword
@@ -260,7 +259,7 @@ class ExistingPasswordGeneration:
                             sweetword_candidate.append(w[j])
                     
                     self.possible_sweetword = "".join(sweetword_candidate)
-                    if self.is_unique(self.possible_sweetword):
+                    if self.is_unique_or_list_empty(self.possible_sweetword):
                         self.honeyword_list.append(self.possible_sweetword)
                         
                 self.honeyword_list.append(self.password) # Append sugarword
