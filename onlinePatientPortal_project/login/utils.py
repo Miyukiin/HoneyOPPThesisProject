@@ -166,6 +166,13 @@ class ExistingPasswordGeneration:
         self.digit_list =  list(string.digits)
         self.honeyword_list = []
     
+    def is_unique(self, honeyword):
+        if not self.honeyword_list or honeyword not in self.honeyword_list:
+            return True
+        else:
+            return False
+        
+    
     def choose_replacement_character(self, character: str) -> str:
         if character.isdigit():
             return str(random.choice(self.digit_list))
@@ -178,44 +185,49 @@ class ExistingPasswordGeneration:
             return str(random.choice(self.symbol_list))
     
     def choose_method(self, choice: int):
+        self.honeyword_list = []
         match choice:
             case 1: # Chaffing by Tail-Tweaking
                 self.num_of_tweaks = 2 # How many characters from the end will be tweaked.
                 
                 while len(self.honeyword_list) < self.num_of_honeywords - 1: # Generate 4 sweet words
-                    self.password_list:list[str] = [*self.password]
+                    self.password_characters:list[str] = [*self.password] # Create a list of characters out of the password
+                    
                     for i in range(self.num_of_tweaks):
-                        self.password_list[len(self.password_list)-(i+1)] = (
-                            self.choose_replacement_character(self.password_list[len(self.password_list)-(i+1)])
+                        self.password_characters[len(self.password_characters)-(i+1)] = (
+                            self.choose_replacement_character(self.password_characters[len(self.password_characters)-(i+1)])
                         )
-                    # Do if list is empty, or if current sweetword is not already in honeyword list.
-                    if not self.honeyword_list or self.password_list not in self.honeyword_list:
-                        self.honeyword_list.append("".join(self.password_list))
                         
-                self.honeyword_list.append(self.password) # Append sweetword
+                    self.possible_sweetword = "".join(self.password_characters)
+                    if self.is_unique(self.possible_sweetword):
+                        self.honeyword_list.append(self.possible_sweetword)
+                        
+                self.honeyword_list.append(self.password) # Append sugarword
                 random.shuffle(self.honeyword_list) # Randomize positions
                 return self.honeyword_list
             
             case 2: # Take-a-tail
                 self.num_of_tail_char = 3 # How many digits do you like to append to your password?
-                self.password_list:list[str] = [*self.password]
+                self.password_characters:list[str] = [*self.password]
                 
                 for i in range(self.num_of_tail_char): # Append digits of length num_of_tail_char
-                    self.password_list.append(random.choice(self.digit_list))
+                    self.password_characters.append(random.choice(self.digit_list))
                 
-                self.password:str = "".join(self.password_list) # Replace password with the appended password
+                self.appended_password:str = "".join(self.password_characters) # oin the characters with appended digits as the new password.
                 
                 while len(self.honeyword_list) < self.num_of_honeywords - 1: # Generate 4 sweet words
-                    self.password_list:list[str] = [*self.password]
+                    self.password_characters:list[str] = [*self.appended_password] # Create a list of characters out of the password
+                    
                     for i in range(self.num_of_tail_char):
-                        self.password_list[len(self.password_list)-(i+1)] = (
-                            self.choose_replacement_character(self.password_list[len(self.password_list)-(i+1)])
+                        self.password_characters[len(self.password_characters)-(i+1)] = (
+                            self.choose_replacement_character(self.password_characters[len(self.password_characters)-(i+1)])
                         )
-                    # Do if list is empty, or if current sweetword is not already in honeyword list.
-                    if not self.honeyword_list or self.password_list not in self.honeyword_list: 
-                        self.honeyword_list.append("".join(self.password_list))
                         
-                self.honeyword_list.append(self.password) # Append sweetword
+                    self.possible_sweetword = "".join(self.password_characters)
+                    if self.is_unique(self.possible_sweetword):
+                        self.honeyword_list.append(self.possible_sweetword)
+                        
+                self.honeyword_list.append(self.appended_password) # Append sugarword
                 random.shuffle(self.honeyword_list) # Randomize positions
                 return self.honeyword_list
                     
@@ -225,13 +237,33 @@ class ExistingPasswordGeneration:
                     wordlist = [line.strip() for line in file]
                     
                 while len(self.honeyword_list) < self.num_of_honeywords - 1:
-                    self.random_password:str = random.choice(wordlist)
+                    w = random.choice(wordlist)
+                    d = len(w)  # Determine the length of the chosen password
                     
-                    # Do if list is empty, or if current sweetword is not already in honeyword list.
-                    if not self.honeyword_list or self.random_password not in self.honeyword_list: 
-                        self.honeyword_list.append("".join(self.random_password))
+                    # Initialize the new password (honeyword) as a list of characters
+                    sweetword_candidate = [w[0]]  # Start with c1 = w1 (first character is directly copied)
+
+                    # Step 2: Generate each character cj for j = 2, 3, ..., d
+                    for j in range(1, d):  # Using range(1, d) because we've already added the first character
+                        probability = random.random()  # Generate a random number between 0 and 1 for the probability.
+
+                        if probability < 0.1:
+                            # With probability 0.1, pick a new password of the same length randomly and take the jth character
+                            new_password = random.choice([p for p in wordlist if len(p) == d])
+                            sweetword_candidate.append(new_password[j])
+                        elif probability < 0.5:
+                            # With probability 0.4, pick a password that matches the previous character and take the jth character
+                            new_password = random.choice([p for p in wordlist if len(p) == d and p[j - 1] == sweetword_candidate[j - 1]])
+                            sweetword_candidate.append(new_password[j])
+                        else:
+                            # With probability 0.5, keep the jth character the same as in the original password
+                            sweetword_candidate.append(w[j])
+                    
+                    self.possible_sweetword = "".join(sweetword_candidate)
+                    if self.is_unique(self.possible_sweetword):
+                        self.honeyword_list.append(self.possible_sweetword)
                         
-                self.honeyword_list.append(self.password) # Append sweetword
+                self.honeyword_list.append(self.password) # Append sugarword
                 random.shuffle(self.honeyword_list) # Randomize positions
                 return self.honeyword_list
             case _:
