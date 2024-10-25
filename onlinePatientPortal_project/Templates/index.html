@@ -1,13 +1,20 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/styles-dashboard.css' %}">
     <title> Results Page </title>
 </head>
 <body>
-    {% if user.is_authenticated %}
+    <div class="header-container"> 
 
+
+
+    </div>
+
+    {% if user.is_authenticated %}
     <h1> Welcome {{username}},</h1>
     {%else%}
     <h1>Not Authenticated</h1>
