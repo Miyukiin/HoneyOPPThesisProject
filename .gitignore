@@ -7,7 +7,7 @@ db.sqlite3
 media
 
 # Password List Ignore
-login/static/password_list.txt
+onlinePatientPortal_project/login/static/password_list.txt
 
 # Database
 db.cnf
