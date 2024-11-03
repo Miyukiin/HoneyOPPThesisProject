@@ -6,6 +6,9 @@ __pycache__
 db.sqlite3
 media
 
+# Password List Ignore
+login/static/password_list.txt
+
 # Database
 db.cnf
 
