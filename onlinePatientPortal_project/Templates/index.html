@@ -29,31 +29,61 @@
         <div class="vertical-navigation-bar">
             <ul class="navbar-menu">
                 <li class = "active" onclick="showContent('patient-profile')"> Patient Profile </li> <!-- First item is default active -->
-                <li onclick="showContent('diagnostics')"> Diagnostics </li>
+                <li onclick="showContent('diagnosis-history')"> Diagnostics </li>
+                <li onclick="showContent('test-results')"> Test Results </li>
+                <li onclick="showContent('family-medical-history')"> Family Medical History</li>
+                <li onclick="showContent('notes-other-reports')"> Notes and Other Reports </li>
+                <li onclick="showContent('personalized-history')"> Personalized History </li>
             </ul>
+            <div class="identifier-text">
+                <p> A.Y. 2024 </p>
+                <p> Pamantasan ng Lungsod Ng Maynila </p>
+            </div>
         </div>
         <!-- Content -->
         <div class="content-area">
 
             {% if user.is_authenticated %}
-                <h1> Welcome {{username}}</h1>
+                <h2> Welcome, {{username}}</h2>
             {%else%}
-                <h1>Not Authenticated</h1>
+                <h2>Not Authenticated</h2>
             {%endif%}
 
 
             <!-- Content Sections -->
             <div id="patient-profile" class="content-section active"> <!-- First item is default active -->
-                <h2>Patient Profile</h2>
-                <p>Details about family history...</p>
+                <h2 class="content-subheader">Patient Profile</h2>
+                <hr class="content-subheader-line">
+                <form class "user-info-class" method="post">
+                    {% csrf_token %}
+                    {{ form.as_div }}
+                </form>
             </div>
-            <div id="diagnostics" class="content-section">
-                <h2>Diagnostics</h2>
-                <p>Details about diagnostics...</p>
+            <div id="diagnosis-history" class="content-section">
+                <h2 class="content-subheader">Diagnosis History</h2>
+                <hr class="content-subheader-line">
+                <p>Details about diagnosis history...</p>
             </div>
-            
-            
-
+            <div id="test-results" class="content-section">
+                <h2 class="content-subheader">Test Results</h2>
+                <hr class="content-subheader-line">
+                <p>Details about test results...</p>
+            </div>
+            <div id="family-medical-history" class="content-section">
+                <h2 class="content-subheader">Family Medical History</h2>
+                <hr class="content-subheader-line">
+                <p>Details about family medical history...</p>
+            </div>
+            <div id="notes-other-reports" class="content-section">
+                <h2 class="content-subheader">Notes and Other Reports</h2>
+                <hr class="content-subheader-line">
+                <p>Details about Notes and Other Reports...</p>
+            </div>
+            <div id="personalized-history" class="content-section">
+                <h2 class="content-subheader">Personalized History</h2>
+                <hr class="content-subheader-line">
+                <p>Details about personalized history...</p>
+            </div>
         </div>
     </div>
 </body>

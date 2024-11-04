@@ -1,12 +1,12 @@
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest
 from django.contrib.auth import authenticate, login
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout, get_user_model
 
-from . import models
+from .models import *
 from .Forms import *
 from .utils import *
 
@@ -72,9 +72,32 @@ def redirect_view(request:HttpRequest):
         return redirect(reverse('login'))
 
 @login_required
-def dashboard_view(request:HttpRequest): 
+def dashboard_view(request:HttpRequest):
     username = request.user.get_username()
-    return render(request, 'index.html', {'username': username})
+    try:
+        user = get_user_model().objects.get(username=username)
+    except get_user_model().DoesNotExist:
+        user = None  # Handle the case where the user is not found
+    except get_user_model().MultipleObjectsReturned:
+        user = None  # Handle the case where multiple users are found
+
+    if user:
+        try:
+            # Use the foreign key relationship to query UserInformation
+            userinfo_object = UserInformation.objects.get(index=user.get_random_index())
+        except UserInformation.DoesNotExist:
+            raise Exception(f"Unable to query User Information for {user}")
+        
+    if userinfo_object:
+        form = UserInformationForm(instance=userinfo_object)
+    else:
+        form = UserInformationForm()
+        
+    context = {
+        'username': username,
+        'form': form 
+    }
+    return render(request, 'index.html', context)
 
 @login_required
 def logout_view(request:HttpRequest):

@@ -4,6 +4,7 @@ import numpy as np
 from PyDictionary import PyDictionary
 import string
 from pathlib import Path
+from django.conf import settings
 
 
 dictionary = PyDictionary()
@@ -232,6 +233,7 @@ class ExistingPasswordGeneration:
                     
             case 3: # Chaffing with a Password-model
                 file_path = Path.cwd() / 'login' / 'static' / 'password_list.txt'
+               # file_path = settings.BASE_DIR / 'login' / 'static' / 'password_list.txt' 
                 with file_path.open('r', encoding='utf-8', errors='ignore') as file:
                     wordlist = [line.strip() for line in file]
                     
@@ -271,6 +273,8 @@ class ExistingPasswordGeneration:
     
 if __name__ == "__main__":
     instance = ExistingPasswordGeneration("henl12oY#")
+    print(instance.choose_method(1))
+    print(instance.choose_method(2))
     print(instance.choose_method(3))
     
    

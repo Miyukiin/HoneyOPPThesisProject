@@ -1,6 +1,6 @@
 :root {
     --bg-color: #F5F5F5; 
-    --text-color: #94999b;
+    --text-color: #2b2c2d;
     --logo-color: #002da8;
     --hover-color: #3554a8;
     --navbar-color: #183481;
@@ -15,7 +15,7 @@ body{
 *, *::before, *::after {
     margin: 0;
     box-sizing: border-box;
-    font-family: 'Montserrat';
+    font-family: 'Arial';
 }
 
 /* Specific override for Font Awesome icons and their pseudo-elements */
@@ -27,7 +27,11 @@ body{
     font-family: "Font Awesome 6 Free" !important; 
     font-weight: 900; 
 }
+h1,h2,h3,p{
+    color: var(--text-color);
+}
 
+/* Header */
 .header-container{
     display: flex;
     width: 100%;
@@ -73,7 +77,7 @@ body{
 
 /* Vertical NavBar */
 .vertical-navigation-bar{
-    padding-top: 15px;
+    padding: 15px 0px;
     width: 15%;
     height: 100%;
     background-color: var(--navbar-color);
@@ -82,6 +86,9 @@ body{
     position: relative;
     color: var(--bg-color);
     transition: 0.3s color;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
 }
 
 /* Navbar Menu*/
@@ -101,6 +108,13 @@ body{
     background-color: var(--hover-color);
 }
 
+.identifier-text, .identifier-text p{
+    width: 100%;
+    text-align: center;
+    color: var(--bg-color)
+    padding
+}
+
 /* Content Area */
 .content-area{
     padding: 15px;
@@ -109,6 +123,7 @@ body{
     background-color: var(--bg-color);
     z-index: 1;
     position: relative;
+
 }
 
 /* Content Sections */
@@ -117,6 +132,8 @@ body{
     display: block;
     position: absolute; /* Make sections overlap */
     transition: opacity 0.5s;
+    width: calc(100% - 30px); /* 15 padding left, 15 padding right. For width because width 100% overflows because position absolute does not respect parent boundary container. */
+    
     
 }
 
@@ -125,3 +142,13 @@ body{
     position: absolute; /* Make sections overlap */
     display: block;
 }
+
+.content-subheader{
+    padding-top: 0.7em;
+}
+
+.content-subheader-line{
+    margin-top: 0.2em;
+    margin-bottom: 0.7em;
+}
+

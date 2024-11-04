@@ -30,6 +30,10 @@ class CustomUserManager(BaseUserManager):
         return user
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
+    class Meta:
+        verbose_name = "CustomUser"  # Singular name
+        verbose_name_plural = "CustomUsers"  # Correct plural name
+        
     username = models.CharField(_("Username"), max_length=50, unique=True)
     email = models.EmailField(_("Email"), unique=True)
     password = models.CharField(_("Password"), max_length=128)
@@ -43,6 +47,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     objects = CustomUserManager()
     
     USERNAME_FIELD = 'username'
+    
+    def get_random_index(self):
+        return self.random_index
 
     def save(self, *args, **kwargs):
         if self.random_index is None:
@@ -77,6 +84,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     
 class HoneyPasswords(models.Model):
+    class Meta:
+        verbose_name = "Honey Password"  # Singular name
+        verbose_name_plural = "Honey Passwords"  # Correct plural name
+        
     index = models.ForeignKey(settings.AUTH_USER_MODEL, to_field= 'random_index', verbose_name=_("User"), on_delete=models.CASCADE)
     honeyPasswords = models.JSONField(default=list)
     
@@ -85,6 +96,9 @@ class HoneyPasswords(models.Model):
         return f"Honeypasswords for {self.index.username} are [{honey_passwords_list}]"
 
 class UserInformation(models.Model):
+    class Meta:
+        verbose_name = "User Information"  # Singular name
+        verbose_name_plural = "User Information"  # Correct plural name
     def __str__(self):
         return self.full_name
     
