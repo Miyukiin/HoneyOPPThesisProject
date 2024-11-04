@@ -6,12 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{% static 'css/styles-index.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous">
+    <script src="{% static 'js/scripts-index.js' %}" async></script>
     <title> Results Page </title>
 </head> 
 <body>
+    <!-- Header -->
     <div class="header-container"> 
         <a href="{% url 'dashboard' %}" ><img class="logo-image" src="{% static 'img/logo5.png' %}" width="180"> </a>
-        
         <div class ="logout-container">
             <form action="{% url 'logout' %}" method="post">
                 {% csrf_token %}
@@ -21,22 +22,39 @@
                 </button>
             </form>
         </div>
-
-
     </div>
 
-    {% if user.is_authenticated %}
-    <h1> Welcome {{username}},</h1>
-    {%else%}
-    <h1>Not Authenticated</h1>
-    {%endif%}
-    {% if result %}
-        <h1> {{result}} </h1>
-    {% else %}
-        <h1> No Result </h1>
-    {% endif %}
+    <div class="body-content">
+        <!-- Navigation Bar -->
+        <div class="vertical-navigation-bar">
+            <ul class="navbar-menu">
+                <li class = "active" onclick="showContent('family-history')"> Patient Profile </li> <!-- First item is default active -->
+                <li onclick="showContent('diagnostics')"> Diagnostics </li>
+            </ul>
+        </div>
+        <!-- Content -->
+        <div class="content-area">
+
+            {% if user.is_authenticated %}
+                <h1> Welcome {{username}}</h1>
+            {%else%}
+                <h1>Not Authenticated</h1>
+            {%endif%}
 
 
-    
+            <!-- Content Sections -->
+            <div id="patient-profile" class="content-section active"> <!-- First item is default active -->
+                <h2>Patient Profile</h2>
+                <p>Details about family history...</p>
+            </div>
+            <div id="diagnostics" class="content-section">
+                <h2>Diagnostics</h2>
+                <p>Details about diagnostics...</p>
+            </div>
+            
+            
+
+        </div>
+    </div>
 </body>
 </html>

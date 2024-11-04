@@ -83,4 +83,6 @@ class HoneyPasswords(models.Model):
     def __str__(self):
         honey_passwords_list = ', '.join([str(password) for password in self.honeyPasswords])
         return f"Honeypasswords for {self.index.username} are [{honey_passwords_list}]"
+
+
     
