@@ -1,0 +1,57 @@
+:root {
+    --bg-color: #F5F5F5; 
+    --text-color: #94999b;
+    --logo-color: #002da8;
+    --hover-color: #3554a8;
+}
+
+/* General reset and global styles */
+*, *::before, *::after {
+    margin: 0;
+    box-sizing: border-box;
+    font-family: 'Montserrat';
+}
+
+/* Specific override for Font Awesome icons and their pseudo-elements */
+.fa, .fas, .far, .fal, .fab, [class^="fa-"], [class*=" fa-"],
+.fa::before, .fas::before, .far::before, .fal::before, .fab::before,
+[class^="fa-"]::before, [class*=" fa-"]::before,
+.fa::after, .fas::after, .far::after, .fal::after, .fab::after,
+[class^="fa-"]::after, [class*=" fa-"]::after {
+    font-family: "Font Awesome 6 Free" !important; 
+    font-weight: 900; 
+}
+
+
+.header-container{
+    display: flex;
+    padding: 0.9em 1.2em;
+    background-color: var(--bg-color);
+    box-shadow: 0px 0px 4px 1px rgba(0,0,0,0.4);
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logout-container{
+    justify-content: center;
+    align-items: center;
+    background-color: #3554a8;
+}
+
+.logout-button{
+    border: 0px;
+    background-color: var(--bg-color);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 1em;
+    transition: color 0.3s;
+}
+
+.logout-button i {
+    transition: color 0.3s;
+}
+
+.logout-button:hover, .logout-button:hover i {
+    color: var(--hover-color); 
+}
+
+

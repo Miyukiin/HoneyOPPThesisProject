@@ -4,12 +4,23 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{% static 'css/styles-dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/styles-index.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous">
     <title> Results Page </title>
-</head>
+</head> 
 <body>
     <div class="header-container"> 
-
+        <a href="{% url 'dashboard' %}" ><img class="logo-image" src="{% static 'img/logo5.png' %}" width="180"> </a>
+        
+        <div class ="logout-container">
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button class="logout-button" type="submit">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    Logout
+                </button>
+            </form>
+        </div>
 
 
     </div>
@@ -25,10 +36,7 @@
         <h1> No Result </h1>
     {% endif %}
 
-    <form action="{% url 'logout' %}" method="post">
-        {% csrf_token %}
-        <button type="submit">Log Out</button>
-    </form>
+
     
 </body>
 </html>
