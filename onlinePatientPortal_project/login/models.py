@@ -84,5 +84,49 @@ class HoneyPasswords(models.Model):
         honey_passwords_list = ', '.join([str(password) for password in self.honeyPasswords])
         return f"Honeypasswords for {self.index.username} are [{honey_passwords_list}]"
 
-
+class UserInformation(models.Model):
+    index = models.ForeignKey(settings.AUTH_USER_MODEL, to_field= 'random_index', verbose_name=_("User"), on_delete=models.CASCADE)
+    full_name = models.CharField(_("Full Name"), max_length=50, unique=False, blank= False, null= False)
+    religion = models.CharField(_("Religion"), max_length=50, unique=False, blank= False, null= False)
     
+    class SexChoices(models.TextChoices):
+        MALE: tuple = 'M', 'Male'
+        FEMALE: tuple = 'F', 'Female'
+    class MaritalChoices(models.TextChoices):
+        Single = 'Single'
+        Married = 'Married'
+        Widowed = 'Widowed'
+        Separated = 'Separated'
+
+    sex = models.CharField(
+        _("Sex"),
+        max_length=1,
+        choices=SexChoices.choices,
+        null= False,
+        blank= False
+    )
+    marital_status = models.CharField(
+        _("Marital Status"),
+        max_length= 9,
+        choices=MaritalChoices.choices,
+        null= False,
+        blank= False
+    )
+    date_of_birth = models.DateField(
+        _("Date of Birth"),
+        null= False,
+        blank= False
+    )
+    social_security_number = models.CharField(
+        _("Social Security Number"),
+        max_length = 9,
+        null= False,
+        blank= False
+    )
+    address = models.CharField(_("Address"), max_length=50, unique=False, blank= False, null= False)
+    country = models.CharField(_("Country"), max_length=50, unique=False, blank= False, null= False)
+    province= models.CharField(_("Province"), max_length=50, unique=False, blank= False, null= False)
+    city = models.CharField(_("City"), max_length=50, unique=False, blank= False, null= False)
+    contact_number = models.CharField(_("Contact Number"), max_length=11, unique=False, blank= False, null= False)
+    zip_code = models.CharField(_("Zip Code"), max_length=4, unique=False, blank= False, null= False)
+    mother_name = models.CharField(_("Mother's Name"), max_length=50, unique=False, blank= False, null= False)

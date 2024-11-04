@@ -86,7 +86,7 @@ DATABASES = {
         }
     }
 }
-
+ # Absolute Path
 LOGIN_URL = '/login/'  # The URL to access the login page
 LOGIN_REDIRECT_URL = '/dashboard/'  # Where users go after logging in
 LOGOUT_URL = '/logout/'  # The URL to access the logout page 
