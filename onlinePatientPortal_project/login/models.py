@@ -85,6 +85,9 @@ class HoneyPasswords(models.Model):
         return f"Honeypasswords for {self.index.username} are [{honey_passwords_list}]"
 
 class UserInformation(models.Model):
+    def __str__(self):
+        return self.full_name
+    
     index = models.ForeignKey(settings.AUTH_USER_MODEL, to_field= 'random_index', verbose_name=_("User"), on_delete=models.CASCADE)
     full_name = models.CharField(_("Full Name"), max_length=50, unique=False, blank= False, null= False)
     religion = models.CharField(_("Religion"), max_length=50, unique=False, blank= False, null= False)
