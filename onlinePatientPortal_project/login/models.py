@@ -82,18 +82,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def is_admin_user(self):
         return self.is_staff
 
-    
-class HoneyPasswords(models.Model):
-    class Meta:
-        verbose_name = "Honey Password"  # Singular name
-        verbose_name_plural = "Honey Passwords"  # Correct plural name
-        
-    index = models.ForeignKey(settings.AUTH_USER_MODEL, to_field= 'random_index', verbose_name=_("User"), on_delete=models.CASCADE)
-    honeyPasswords = models.JSONField(default=list)
-    
-    def __str__(self):
-        honey_passwords_list = ', '.join([str(password) for password in self.honeyPasswords])
-        return f"Honeypasswords for {self.index.username} are [{honey_passwords_list}]"
 
 class UserInformation(models.Model):
     class Meta:
