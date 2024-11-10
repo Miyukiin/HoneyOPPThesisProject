@@ -44,7 +44,7 @@
         <div class="content-area">
 
             {% if user.is_authenticated %}
-                <h2> Welcome, {{username}}</h2>
+                <h2> Welcome, {{username}}, environment is {{environment}}</h2>
             {%else%}
                 <h2>Not Authenticated</h2>
             {%endif%}

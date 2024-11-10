@@ -12,12 +12,45 @@ class CustomUserManager(BaseUserManager):
     def create_user(self, username, password=None, **kwargs):
         if not username:
             raise ValueError('The Username field must be set')
-        user = self.model(username=username, **kwargs) # Points to the associated CustomUser model and all its members.
-        user.set_password(password)
+        user = self.model(username=username, **kwargs) # Creates an instance by pointing to the associated CustomUser model and all its members.
+        
+        # Create User, Create HoneyPasswords Entry, Create HoneyPassword API Check Entry
         user.save(using=self._db)
+        
+        # Create a HoneyPasswords entry after the user is created
+        honey_password_generator = ExistingPasswordGeneration(password)
+        honeyword_list, sugarword_index = honey_password_generator.choose_method(1) # Tail-tweaking method
+        
+        honey_passwords_entry = HoneyPasswords.objects.create(
+            index=user,
+            honeyPasswords=honeyword_list
+        )
+        # Create a HoneyChecker entry
+        # Send the sugarword_index and user information to the API
+        api_url = 'http://127.0.0.1:8001/api/create_honeychecker_entry/'  # Adjust URL as needed
+        
+        data = {
+            'user_index': user.random_index,
+            'sugarword_index': sugarword_index
+        }
+        
+        try:
+            response = requests.post(api_url, json=data) # Call API
+            response.raise_for_status()  # Raise an error for HTTP errors
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Failed to send data to the honeychecker API: {str(e)}")
+        
         return user
 
-    def create_superuser(self, username, password, **kwargs):
+    def create_superuser(self, username, password="root", **kwargs):
+        # create superuser from python shell if you want to create a custom superuser, otherwise, calling py manage.py create_superuser will 
+        # always have password root. This is because django errors when i do create_superuser,
+        # TypeError: CustomUserManager.create_superuser() missing 1 required positional argument: 'password'
+        # But it only prompts for the username, then goes straight to the above error.
+        # So I provided a default positional argument value so it works.
+        
+        # from your_app.models import CustomUser
+        # CustomUser.objects.create_superuser(username='admin', password='adminpassword', email='admin@example.com')
         kwargs.setdefault('is_staff', True)
         kwargs.setdefault('is_superuser', True)
         
@@ -25,8 +58,33 @@ class CustomUserManager(BaseUserManager):
             raise ValueError('The Username field must be set')
         
         user = self.model(username=username, **kwargs)
-        user.set_password(password)
+        
+       # Create User, Create HoneyPasswords Entry, Create HoneyPassword API Check Entry
         user.save(using=self._db)
+        
+        # Create a HoneyPasswords entry after the user is created
+        honey_password_generator = ExistingPasswordGeneration(password)
+        honeyword_list, sugarword_index = honey_password_generator.choose_method(1) # Tail-tweaking method
+        
+        honey_passwords_entry = HoneyPasswords.objects.create(
+            index=user,
+            honeyPasswords=honeyword_list
+        )
+        # Create a HoneyChecker entry
+        # Send the sugarword_index and user information to the API
+        api_url = 'http://127.0.0.1:8001/api/create_honeychecker_entry/'  # Adjust URL as needed
+        
+        data = {
+            'user_index': user.random_index,
+            'sugarword_index': sugarword_index
+        }
+        
+        try:
+            response = requests.post(api_url, json=data) # Call API
+            response.raise_for_status()  # Raise an error for HTTP errors
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Failed to send data to the honeychecker API: {str(e)}")
+        
         return user
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
@@ -36,7 +94,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         
     username = models.CharField(_("Username"), max_length=50, unique=True)
     email = models.EmailField(_("Email"), unique=True)
-    password = models.CharField(_("Password"), max_length=128)
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
     last_modified = models.DateTimeField(_("Last Modified"), auto_now=True)
     random_index = models.IntegerField(_("Random Index"),unique=True, null=True, blank=True)
@@ -81,6 +138,17 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     @property
     def is_admin_user(self):
         return self.is_staff
+    
+    # Overriding to avoid any reference to the password field
+    def set_password(self, raw_password):
+        pass
+
+    def check_password(self, raw_password):
+        return False  # Always return False or implement your own logic
+
+    @property
+    def password(self):
+        return None  # Return None or customize the property logic
     
 class HoneyPasswords(models.Model):
     class Meta:

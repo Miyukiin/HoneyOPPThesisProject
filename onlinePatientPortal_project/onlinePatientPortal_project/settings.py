@@ -98,6 +98,7 @@ LOGOUT_REDIRECT_URL = '/login/'  # Where users go after logging out
 AUTH_USER_MODEL = 'login.CustomUser'
 
 AUTHENTICATION_BACKENDS = [
+    'login.backends.HoneywordBackend', # Custom Backend
     'django.contrib.auth.backends.ModelBackend',  # Default backend
 ]
 AUTH_PASSWORD_VALIDATORS = [

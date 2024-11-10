@@ -1,21 +1,13 @@
 import random
 from Levenshtein import distance as levenshtein_distance  # Requires python-Levenshtein package
+from django.http import JsonResponse
 import numpy as np
 from PyDictionary import PyDictionary
 import string
 from pathlib import Path
 from django.conf import settings
 import requests
-
-def check_honeyword(username, password):
-    api_url = 'http://127.0.0.1:8000/api/verify/'  # Local address of the API provider
-    data = {'username': username, 'password': password}
-    response = requests.post(api_url, json=data)
-
-    if response.status_code == 200:
-        return response.json()
-    else:
-        return {'status': 'error', 'message': 'Service unavailable'}
+from .models import *
     
 dictionary = PyDictionary()
 
@@ -214,7 +206,8 @@ class ExistingPasswordGeneration:
                         
                 self.honeyword_list.append(self.password) # Append sugarword
                 random.shuffle(self.honeyword_list) # Randomize positions
-                return self.honeyword_list
+                sugarword_index = self.honeyword_list.index(self.password) # Find the index of the sugarword for the API HoneyChecker 
+                return self.honeyword_list, sugarword_index
             
             case 2: # Take-a-tail
                 self.num_of_tail_char = 3 # How many digits do you like to append to your password?
@@ -223,7 +216,7 @@ class ExistingPasswordGeneration:
                 for i in range(self.num_of_tail_char): # Append digits of length num_of_tail_char
                     self.password_characters.append(random.choice(self.digit_list))
                 
-                self.appended_password:str = "".join(self.password_characters) # oin the characters with appended digits as the new password.
+                self.appended_password:str = "".join(self.password_characters) # join the characters with appended digits as the new password.
                 
                 while len(self.honeyword_list) < self.num_of_honeywords - 1: # Generate 4 sweet words
                     self.password_characters:list[str] = [*self.appended_password] # Create a list of characters out of the password
@@ -239,7 +232,8 @@ class ExistingPasswordGeneration:
                         
                 self.honeyword_list.append(self.appended_password) # Append sugarword
                 random.shuffle(self.honeyword_list) # Randomize positions
-                return self.honeyword_list
+                sugarword_index = self.honeyword_list.index(self.appended_password) # Find the index of the sugarword for the API HoneyChecker 
+                return self.honeyword_list, sugarword_index
                     
             case 3: # Chaffing with a Password-model
                 file_path = Path.cwd() / 'login' / 'static' / 'password_list.txt'
@@ -276,7 +270,8 @@ class ExistingPasswordGeneration:
                         
                 self.honeyword_list.append(self.password) # Append sugarword
                 random.shuffle(self.honeyword_list) # Randomize positions
-                return self.honeyword_list
+                sugarword_index = self.honeyword_list.index(self.password) # Find the index of the sugarword for the API HoneyChecker 
+                return self.honeyword_list, sugarword_index
             case _:
                 raise Exception("Choose Method. Choice not in range.")
 
