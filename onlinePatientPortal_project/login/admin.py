@@ -7,3 +7,4 @@ from login.models import CustomUser
 
 admin.site.register(CustomUser)
 admin.site.register(UserInformation)
+admin.site.register(HoneyPasswords)
