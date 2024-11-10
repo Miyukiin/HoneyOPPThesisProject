@@ -5,8 +5,18 @@ from PyDictionary import PyDictionary
 import string
 from pathlib import Path
 from django.conf import settings
+import requests
 
+def check_honeyword(username, password):
+    api_url = 'http://127.0.0.1:8000/api/verify/'  # Local address of the API provider
+    data = {'username': username, 'password': password}
+    response = requests.post(api_url, json=data)
 
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return {'status': 'error', 'message': 'Service unavailable'}
+    
 dictionary = PyDictionary()
 
 def is_word_in_dictionary(word):
@@ -269,6 +279,7 @@ class ExistingPasswordGeneration:
                 return self.honeyword_list
             case _:
                 raise Exception("Choose Method. Choice not in range.")
+
             
     
 if __name__ == "__main__":
