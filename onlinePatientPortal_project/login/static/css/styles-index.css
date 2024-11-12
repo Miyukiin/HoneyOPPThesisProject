@@ -11,6 +11,11 @@ body{
     height: 100vh;
 }
 
+/* Set a base font size */
+html {
+    font-size: 16px; /* Default base font size */
+}
+
 /* General reset and global styles */
 *, *::before, *::after {
     margin: 0;
@@ -35,7 +40,7 @@ h1,h2,h3,p{
 .header-container{
     display: flex;
     width: 100%;
-    height: 11%;
+    height: 10%;
     padding: 0.9em 1.2em;
     background-color: var(--bg-color);
     box-shadow: 0px 0px 4px 1px rgba(0,0,0,0.4);
@@ -70,7 +75,7 @@ h1,h2,h3,p{
 
 .body-content{
     display: flex;
-    height: 89%;
+    height: 90%;
     z-index: 1;
     position: relative;
 }
@@ -111,8 +116,12 @@ h1,h2,h3,p{
 .identifier-text, .identifier-text p{
     width: 100%;
     text-align: center;
-    color: var(--bg-color)
-    padding
+    color: var(--bg-color);
+    
+}
+
+.identifier-text{
+    padding: 0px 15px;
 }
 
 /* Content Area */
@@ -129,11 +138,10 @@ h1,h2,h3,p{
 /* Content Sections */
 .content-section {
     opacity: 0;
-    display: block;
+    display: none;
     position: absolute; /* Make sections overlap */
-    transition: opacity 0.5s;
+    transition: opacity 0.1s;
     width: calc(100% - 30px); /* 15 padding left, 15 padding right. For width because width 100% overflows because position absolute does not respect parent boundary container. */
-    
     
 }
 
@@ -152,3 +160,77 @@ h1,h2,h3,p{
     margin-bottom: 0.7em;
 }
 
+#patient-identifier{
+    font-size: 1em;
+    color: var(--navbar-color);
+}
+
+.content-container{
+    max-width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+/* Columns in Content Container */
+.content-subcontainer-one,
+.content-subcontainer-two {
+    flex: 1; /* Each subcontainer takes up equal width */
+    min-width: 300px;
+}
+
+/* Label and Input Pairs */
+.info-pair, .info-pair-multiple{
+    display: flex;
+    margin-bottom: 0.2rem; 
+    margin-left: 10px;
+}
+
+.info-pair label, .info-pair-multiple-label-first-item{
+    width: 100%;
+    max-width: 10em;
+}
+
+.info-pair input{
+    width: 30em;
+}
+
+.info-pair input:focus, .info-pair input:hover, .info-pair-multiple input:focus, .info-pair-multiple:hover {
+    outline: none; /* Remove outline when focused */
+}
+
+.info-pair-multiple-label{
+    width: 2.5em;
+    margin-left: 0.2em;
+}
+
+.info-pair-multiple input{
+    max-width: 7.5em;
+}
+
+.content-subcontainer-two .info-pair{
+    margin-left: 0px;
+}
+
+
+/* Responsive Adjustments */
+
+/* Mobile */
+@media (max-width: 480px) {
+    html {
+        font-size: 10px;
+    }
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+    html {
+        font-size: 11px;
+    }
+}
+
+/* Laptop */
+@media (max-width: 1024px) {
+    html {
+        font-size: 12px;
+    }
+}
