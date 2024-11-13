@@ -28,12 +28,16 @@
         <!-- Navigation Bar -->
         <div class="vertical-navigation-bar">
             <ul class="navbar-menu">
-                <li class = "active" onclick="showContent('patient-profile')"> Patient Profile </li> <!-- First item is default active -->
-                <li onclick="showContent('diagnosis-history')"> Diagnostics </li>
-                <li onclick="showContent('test-results')"> Test Results </li>
-                <li onclick="showContent('family-medical-history')"> Family Medical History</li>
-                <li onclick="showContent('notes-other-reports')"> Notes and Other Reports </li>
-                <li onclick="showContent('personalized-history')"> Personalized History </li>
+                <li class = "active" id="general-tab-item"> General</li> <!-- First item is default active -->
+                <li id="additional-info-tab-item"> Additional Information</li>
+                <li id="contacts-addresses-tab-item"> Contacts and Addresses</li>
+                <li id="family-information-tab-item"> Family Information</li>
+                <li id="medical-cases-tab-item"> Medical Cases</li>
+                <li id="bad-habits-tab-item"> Bad Habits</li>
+                <li id="drugs-medicines-taken-tab-item"> Drugs and Medicines Taken</li>
+                <li id="procedures-tab-item"> Procedures</li>
+                <li id="allergies-tab-item"> Allergies</li>
+                <li id="family-medical-history-tab-item"> Family Medical History</li>
             </ul>
             <div class="identifier-text">
                 <p> A.Y. 2024 </p>
@@ -44,46 +48,85 @@
         <div class="content-area">
 
             {% if user.is_authenticated %}
-                <h2> Welcome, {{username}}, environment is {{environment}}</h2>
+                <h2 id='patient-identifier'> Patient: {{user_full_name}} | Environment: {{environment}}</h2>
             {%else%}
-                <h2>Not Authenticated</h2>
+                <h2 id='patient-identifier'>Not Authenticated</h2>
             {%endif%}
 
-
             <!-- Content Sections -->
-            <div id="patient-profile" class="content-section active"> <!-- First item is default active -->
-                <h2 class="content-subheader">Patient Profile</h2>
+            <div id="general-tab-content" class="content-section active"> <!-- First item is default active -->
+                <h2 class="content-subheader">General</h2>
                 <hr class="content-subheader-line">
-                <form class "user-info-class" method="post">
+                <form class="general-form-group" method="post">
                     {% csrf_token %}
-                    {{ form.as_div }}
+                    <div class="content-container"> <!-- Grid container for form fields -->
+                        <div class='column'>
+                            {% for field in general_form.first_column_fields %}
+                                <div class="form-group form-class">
+                                    {{ field.label_tag }} {{ field }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class='column'>
+                            {% for field in general_form.second_column_fields %}
+                                <div class="form-group form-class">
+                                    {% if field.field.widget.input_type == "checkbox" %}
+                                        {{ field }} {{ field.label_tag }}
+                                    {% else %}
+                                        {{ field.label_tag }} {{ field }}
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </form>
-            </div>
-            <div id="diagnosis-history" class="content-section">
-                <h2 class="content-subheader">Diagnosis History</h2>
+            </div>  
+            <div id="additional-info-tab-content" class="content-section">
+                <h2 class="content-subheader">Additional Information</h2>
                 <hr class="content-subheader-line">
                 <p>Details about diagnosis history...</p>
             </div>
-            <div id="test-results" class="content-section">
-                <h2 class="content-subheader">Test Results</h2>
+            <div id="contacts-addresses-tab-content" class="content-section">
+                <h2 class="content-subheader">Contacts and Addresses</h2>
                 <hr class="content-subheader-line">
                 <p>Details about test results...</p>
             </div>
-            <div id="family-medical-history" class="content-section">
-                <h2 class="content-subheader">Family Medical History</h2>
+            <div id="family-information-tab-content" class="content-section">
+                <h2 class="content-subheader">Family Information</h2>
                 <hr class="content-subheader-line">
                 <p>Details about family medical history...</p>
             </div>
-            <div id="notes-other-reports" class="content-section">
-                <h2 class="content-subheader">Notes and Other Reports</h2>
+            <div id="medical-cases-tab-content" class="content-section">
+                <h2 class="content-subheader">Medical Cases</h2>
                 <hr class="content-subheader-line">
                 <p>Details about Notes and Other Reports...</p>
             </div>
-            <div id="personalized-history" class="content-section">
-                <h2 class="content-subheader">Personalized History</h2>
+            <div id="bad-habits-tab-content" class="content-section">
+                <h2 class="content-subheader">Bad Habits</h2>
                 <hr class="content-subheader-line">
                 <p>Details about personalized history...</p>
             </div>
+            <div id="drugs-medicines-taken-tab-content" class="content-section">
+                <h2 class="content-subheader">Drugs and Medicines Taken</h2>
+                <hr class="content-subheader-line">
+                <p>Details about personalized history...</p>
+            </div>
+            <div id="procedures-tab-content" class="content-section">
+                <h2 class="content-subheader">Procedures</h2>
+                <hr class="content-subheader-line">
+                <p>Details about personalized history...</p>
+            </div>
+            <div id="allergies-tab-content" class="content-section">
+                <h2 class="content-subheader">Allergies</h2>
+                <hr class="content-subheader-line">
+                <p>Details about personalized history...</p>
+            </div>
+            <div id="family-medical-history-tab-content" class="content-section">
+                <h2 class="content-subheader">Family Medical History</h2>
+                <hr class="content-subheader-line">
+                <p>Details about personalized history...</p>
+            </div>
+
         </div>
     </div>
 </body>

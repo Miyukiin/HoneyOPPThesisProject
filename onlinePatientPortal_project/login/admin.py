@@ -6,5 +6,6 @@ from login.models import CustomUser
 # Register your models here.
 
 admin.site.register(CustomUser)
-admin.site.register(UserInformation)
+admin.site.register(UserGeneralInformation)
+admin.site.register(UserMedicalInformation)
 admin.site.register(HoneyPasswords)

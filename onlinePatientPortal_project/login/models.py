@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, AbstractUser
 import random
 from django.contrib.auth import get_user_model
+from .static.models_resources import AllNationalities, AllReligion
 
 from django.conf import settings
 from .utils import *
@@ -155,63 +156,104 @@ class HoneyPasswords(models.Model):
         verbose_name = "Honey Password"  # Singular name
         verbose_name_plural = "Honey Passwords"  # Correct plural name
         
-    index = models.ForeignKey(settings.AUTH_USER_MODEL, to_field= 'random_index', verbose_name=_("User"), on_delete=models.CASCADE)
+    index = models.OneToOneField(to=settings.AUTH_USER_MODEL, to_field= 'random_index', verbose_name=_("User"), on_delete=models.CASCADE)
     honeyPasswords = models.JSONField(default=list)
     
     def __str__(self):
-        honey_passwords_list = ', '.join([str(password) for password in self.honeyPasswords])
-        return f"Honeypasswords for {self.index.username} are [{honey_passwords_list}]"
-
-
-class UserInformation(models.Model):
+        try:
+            query_object = UserGeneralInformation.objects.get(index=self.index) 
+            return " ".join([query_object.first_name, query_object.middle_name, query_object.last_name])
+        
+        except UserGeneralInformation.DoesNotExist:
+            return str(self.index) # Admin User Case
+            
+class UserGeneralInformation(models.Model):
     class Meta:
         verbose_name = "User Information"  # Singular name
         verbose_name_plural = "User Information"  # Correct plural name
+        
     def __str__(self):
-        return self.full_name
+        return " ".join([self.first_name, self.middle_name, self.last_name])
     
-    index = models.ForeignKey(settings.AUTH_USER_MODEL, to_field= 'random_index', verbose_name=_("User"), on_delete=models.CASCADE)
-    full_name = models.CharField(_("Full Name"), max_length=50, unique=False, blank= False, null= False)
-    religion = models.CharField(_("Religion"), max_length=50, unique=False, blank= False, null= False)
-    
+    class CivilChoices(models.TextChoices):
+        Single:tuple = 'Single','Single'
+        Married:tuple = 'Married','Married'
+        Widowed:tuple = 'Widowed','Widowed'
+        Separated:tuple = 'Separated','Separated'
+        
     class SexChoices(models.TextChoices):
-        MALE: tuple = 'M', 'Male'
-        FEMALE: tuple = 'F', 'Female'
-    class MaritalChoices(models.TextChoices):
-        Single = 'Single'
-        Married = 'Married'
-        Widowed = 'Widowed'
-        Separated = 'Separated'
-
-    sex = models.CharField(
-        _("Sex"),
-        max_length=1,
-        choices=SexChoices.choices,
-        null= False,
-        blank= False
-    )
-    marital_status = models.CharField(
-        _("Marital Status"),
-        max_length= 9,
-        choices=MaritalChoices.choices,
-        null= False,
-        blank= False
-    )
-    date_of_birth = models.DateField(
-        _("Date of Birth"),
-        null= False,
-        blank= False
-    )
-    social_security_number = models.CharField(
-        _("Social Security Number"),
-        max_length = 9,
-        null= False,
-        blank= False
-    )
-    address = models.CharField(_("Address"), max_length=50, unique=False, blank= False, null= False)
-    country = models.CharField(_("Country"), max_length=50, unique=False, blank= False, null= False)
-    province= models.CharField(_("Province"), max_length=50, unique=False, blank= False, null= False)
-    city = models.CharField(_("City"), max_length=50, unique=False, blank= False, null= False)
-    contact_number = models.CharField(_("Contact Number"), max_length=11, unique=False, blank= False, null= False)
-    zip_code = models.CharField(_("Zip Code"), max_length=4, unique=False, blank= False, null= False)
-    mother_name = models.CharField(_("Mother's Name"), max_length=50, unique=False, blank= False, null= False)
+        Male:tuple = 'Male','Male'
+        Female:tuple = 'Female','Female'
+        
+    NationalityChoices = [(nat, nat) for nat in AllNationalities]
+    ReligionChoices = [(rel, rel) for rel in AllReligion]
+   
+    index = models.OneToOneField(to=settings.AUTH_USER_MODEL, to_field='random_index', verbose_name=_("User"), on_delete=models.CASCADE)
+    last_name = models.CharField(_("Last Name"), max_length=20, unique=False, blank= False, null= True)
+    first_name = models.CharField(_("First Name"), max_length=20, unique=False, blank= False, null= True)
+    middle_name = models.CharField(_("Middle Name"), max_length=20, unique=False, blank= False, null= True)
+    suffix_name = models.CharField(_("Suffix Name"), max_length=20, unique=False, blank= True, null= True)
+    civil_status = models.CharField(_("Marital Status"),max_length= 9, choices=CivilChoices.choices, null= True, blank= False)
+    sex = models.CharField(_("Gender / Sex"), max_length=10, choices=SexChoices.choices, null= True, blank= False)
+    nationality = models.CharField(_("Nationality"), max_length=33, choices=NationalityChoices, null= True, blank= False)
+    religion = models.CharField(_("Religion"), max_length=28, choices=ReligionChoices, null= True, blank= False)
+    philID = models.CharField(_("PhilID"), max_length=12, unique=False, blank= False, null= True)
+    sss_number = models.CharField(_("SSS No."), max_length=9, unique=False, blank= False, null= True)
+    passport_number = models.CharField(_("Passport No."), max_length=9, unique=False, blank= False, null= True)
+    birth_date = models.DateField(_("Birth Date"), unique=False, blank= False, null= True)
+    age = models.CharField(_("Age"), max_length=5, unique=False, blank= False, null= True)
+    birth_place = models.CharField(_("Birth Place"), max_length=25, unique=False, blank= False, null= True)
+    citizenship = models.CharField(_("Citizenship(s)"), max_length=20, unique=False, blank= False, null= True)
+    company = models.CharField(_("Company"), max_length=20, unique=False, blank= False, null= True)
+    company_address = models.CharField(_("Company Address"), max_length=20, unique=False, blank= False, null= True)
+    remarks = models.CharField(_("Remarks"),max_length=40, unique=False, blank= True, null= True)
+    occupation = models.CharField(_("Occupation"), max_length=20, unique=False, blank= False, null= True)
+    isAmericanIndian = models.BooleanField(_("American Indian or Alaska Native"), blank= False, null= True)
+    isAsian = models.BooleanField(_("Asian"), blank= False, null= True)
+    isBlack = models.BooleanField(_("Black or African American"), blank= False, null= True)
+    isHispanic = models.BooleanField(_("Hispanic or Latino"), blank= False, null= True)
+    isWhite = models.BooleanField(_("White"), blank= False, null= True)
+    isNativeHawaiian = models.BooleanField(_("Native Hawaiian or Other Pacific Islander"), blank= False, null= True)
+    isChild = models.BooleanField(_("Child?"), blank= False, null= True)
+    isNonLocal = models.BooleanField(_("Non-Local?"), blank= False, null= True)
+    isHospitalEmp = models.BooleanField(_("Hospital Employee?"), blank= False, null= True)
+    isNoPersonalDataRelease = models.BooleanField(_("No personal data released to other parties?"), blank= False, null= True)
+    isNoCompanyCommunication = models.BooleanField(_("No communication from company?"), blank= False, null= True)
+    isFictitiousBirthDate = models.BooleanField(_("Fictitious Birth Date"), blank= False, null= True)
+    isConfidentialPatientRecord = models.BooleanField(_("Confidential Patient Record"), blank= False, null= True)
+    
+class UserMedicalInformation(models.Model):
+    class Meta:
+        verbose_name = "User Medical Information"  # Singular name
+        verbose_name_plural = "User Medical Information"  # Correct plural name
+        
+    def __str__(self):
+        query_object = UserGeneralInformation.objects.get(index=self.index)
+        return " ".join([query_object.first_name, query_object.middle_name, query_object.last_name])
+    
+    class BloodTypeChoices(models.TextChoices):
+        a_plus = "A+","A+"
+        a_negative = "A-", "A-"
+        b_plus = "B+", "B+"
+        b_negative = "B-", "B-"
+        ab_plus = "AB+", "AB+"
+        ab_negative = "AB-", "AB-"
+        o_plus = "O+", "O+"
+        o_negative = "O-", "O-"
+    
+    index = models.OneToOneField(to=settings.AUTH_USER_MODEL, to_field='random_index', verbose_name=_("User"), on_delete=models.CASCADE)
+    patient_number = models.CharField(_("Patient Number"), max_length=10, unique=False, blank= False, null= True)
+    patient_identification = models.CharField(_("Patient ID"), max_length=10, unique=False, blank= False, null= True)
+    patient_tin_number = models.CharField(_("Patient Tin No."), max_length=20, unique=False, blank= False, null= True)
+    patient_phic_number = models.CharField(_("Patient Phic No."), max_length=10, unique=False, blank= False, null= True)
+    mr_locator_no = models.CharField(_("M.R Locator No."), max_length=10, unique=False, null= True)
+    blood_type = models.CharField(_("Blood Type"), max_length=5, choices=BloodTypeChoices, null= True, blank= False)
+    weight = models.CharField(_("Weight"), max_length=5, unique=False, blank= False, null= True)
+    temperature = models.CharField(_("Temperature"), max_length=5, unique=False, blank= False, null= True)
+    blood_pressure = models.CharField(_("Blood Pressure"), max_length=5, unique=False, blank= False, null= True)
+    GCS = models.CharField(_("GCS"), max_length=5, unique=False, blank= False, null= True)
+    O2 = models.CharField(_("O2"), max_length=5, unique=False, blank= False, null= True)
+    HR = models.CharField(_("HR"), max_length=5, unique=False, blank= False, null= True)
+    RR = models.CharField(_("RR"), max_length=5, unique=False, blank= False, null= True)
+    xray_file_number = models.CharField(_("Xray File No."), max_length=20, unique=False, blank= False, null= True)
+    

@@ -132,18 +132,18 @@ h1,h2,h3,p{
     background-color: var(--bg-color);
     z-index: 1;
     position: relative;
-    
+    overflow-y: auto;
 
 }
 
 /* Content Sections */
 .content-section {
+    flex: 1;
     opacity: 0;
     display: none;
     position: absolute; /* Make sections overlap */
     transition: opacity 0.1s;
     width: calc(100% - 30px); /* 15 padding left, 15 padding right. For width because width 100% overflows because position absolute does not respect parent boundary container. */
-    
 }
 
 .content-section.active {
@@ -164,54 +164,14 @@ h1,h2,h3,p{
 #patient-identifier{
     font-size: 1em;
     color: var(--navbar-color);
+    margin-bottom: 1em;
 }
 
 .content-container{
-    max-width: 100%;
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 equal columns */
+    gap: 5px; /* Space between items */
 }
-
-/* Columns in Content Container */
-.content-subcontainer-one,
-.content-subcontainer-two {
-    flex: 1; /* Each subcontainer takes up equal width */
-    min-width: 300px;
-}
-
-/* Label and Input Pairs */
-.info-pair, .info-pair-multiple{
-    display: flex;
-    margin-bottom: 0.2rem; 
-    margin-left: 10px;
-}
-
-.info-pair label, .info-pair-multiple-label-first-item{
-    width: 100%;
-    max-width: 10em;
-}
-
-.info-pair input{
-    width: 30em;
-}
-
-.info-pair input:focus, .info-pair input:hover, .info-pair-multiple input:focus, .info-pair-multiple:hover {
-    outline: none; /* Remove outline when focused */
-}
-
-.info-pair-multiple-label{
-    width: 2.5em;
-    margin-left: 0.2em;
-}
-
-.info-pair-multiple input{
-    max-width: 7.5em;
-}
-
-.content-subcontainer-two .info-pair{
-    margin-left: 0px;
-}
-
 
 /* Responsive Adjustments */
 
@@ -226,6 +186,9 @@ h1,h2,h3,p{
 @media (max-width: 768px) {
     html {
         font-size: 11px;
+    }
+    .content-container {
+        grid-template-columns: 1fr; /* Stack in a single column for smaller screens */
     }
 }
 

@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout, get_user_model
 
 from .models import *
-from .Forms import *
+from .forms import *
 from .utils import *
 
 
@@ -97,38 +97,50 @@ def dashboard_view(request:HttpRequest):
     if is_genuine:
         if user:
             try:
-                # Use the foreign key relationship to query UserInformation
-                userinfo_object = UserInformation.objects.get(index=user.get_random_index())
-            except UserInformation.DoesNotExist:
+                # Use the relationship to query UserInformation
+                user_general_info_object = UserGeneralInformation.objects.get(index=user.get_random_index())
+                user_medical_info_object = UserMedicalInformation.objects.get(index=user.get_random_index())
+            except UserGeneralInformation.DoesNotExist or UserMedicalInformation.DoesNotExist:
                 raise Exception(f"Unable to query User Information for {user}")
             
-        if userinfo_object:
-            form = UserInformationForm(instance=userinfo_object)
+        if  user_general_info_object and user_medical_info_object:
+            general_form = UserGeneralInformationForm(instance=user_general_info_object)
+            medical_form = UserMedicalInformationForm(instance=user_medical_info_object)
+            user_full_name = " ".join([user_general_info_object.first_name,user_general_info_object.middle_name,user_general_info_object.last_name])
         else:
-            form = UserInformationForm()
+            general_form = UserGeneralInformationForm()
+            medical_form = UserMedicalInformationForm()
+            user_full_name = 'None'
             
         context = {
-            'username': username,
-            'form': form,
+            'user_full_name': user_full_name,
+            'general_form': general_form,
+            'medical_form': medical_form,
             'environment': "Genuine" 
         }
     else: # Fictitious Environment. Plug logic for fake data here.
         if user:
             try:
-                # Use the foreign key relationship to query UserInformation
-                userinfo_object = UserInformation.objects.get(index=user.get_random_index())
-            except UserInformation.DoesNotExist:
+                # Use the relationship to query UserInformation
+                user_general_info_object = UserGeneralInformation.objects.get(index=user.get_random_index())
+                user_medical_info_object = UserMedicalInformation.objects.get(index=user.get_random_index())
+            except UserGeneralInformation.DoesNotExist or UserMedicalInformation.DoesNotExist:
                 raise Exception(f"Unable to query User Information for {user}")
             
-        if userinfo_object:
-            form = UserInformationForm(instance=userinfo_object)
+        if  user_general_info_object and user_medical_info_object:
+            general_form = UserGeneralInformationForm(instance=user_general_info_object)
+            medical_form = UserMedicalInformationForm(instance=user_medical_info_object)
+            user_full_name = " ".join([user_general_info_object.first_name,user_general_info_object.middle_name,user_general_info_object.last_name])
         else:
-            form = UserInformationForm()
+            general_form = UserGeneralInformationForm()
+            medical_form = UserMedicalInformationForm()
+            user_full_name = 'None'
             
         context = {
-            'username': username,
-            'form': form,
-            'environment': "Fake" 
+            'user_full_name': user_full_name,
+            'general_form': general_form,
+            'medical_form': medical_form,
+            'environment': "Fictitious" 
         }
         
     

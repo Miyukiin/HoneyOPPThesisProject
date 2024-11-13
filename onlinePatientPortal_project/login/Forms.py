@@ -1,5 +1,5 @@
 from django import forms
-from login.models import CustomUser, UserInformation
+from login.models import CustomUser, UserGeneralInformation, UserMedicalInformation
 
 class LoginForm(forms.Form):
     username = forms.CharField(
@@ -60,31 +60,59 @@ class RegistrationForm(forms.Form):
         )
     )
 
-class UserInformationForm(forms.ModelForm):
+class UserGeneralInformationForm(forms.ModelForm):
     class Meta:
-        model = UserInformation
+        model = UserGeneralInformation
+        fields = '__all__'
+        exclude = ['index']
+        widgets = {
+            'isAmericanIndian': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
+            'isAsian': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
+            'isBlack': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
+            'isHispanic': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
+            'isWhite': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
+            'isNativeHawaiian': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
+            'isChild': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
+            'isNonLocal': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
+            'isHospitalEmp': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
+            'isNoPersonalDataRelease': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
+            'isNoCompanyCommunication': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
+            'isFictitiousBirthDate': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
+            'isConfidentialPatientRecord': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
+        }
+        
+    first_column_fields = []
+    second_column_fields = []
+    
+    def __init__(self, *args, **kwargs):
+        super(UserGeneralInformationForm, self).__init__(*args, **kwargs)
+        
+        self.first_column_fields = [self[field] for field in [
+            'first_name', 'middle_name', 'last_name', 'suffix_name', 'civil_status', 'sex', 'nationality', 
+            'religion', 'philID', 'sss_number', 'passport_number', 'citizenship', 'company', 
+            'company_address', 'occupation'
+        ]]
+        
+        self.second_column_fields = [self[field] for field in [
+            'birth_date', 'isFictitiousBirthDate', 'age', 'remarks', 'isAmericanIndian', 'isAsian', 
+            'isBlack', 'isHispanic', 'isWhite', 'isNativeHawaiian', 'isChild', 'isNonLocal', 
+            'isHospitalEmp', 'isNoPersonalDataRelease', 'isNoCompanyCommunication', 
+            'isConfidentialPatientRecord'
+        ]]
+
+        for field in self.fields.values():
+            field.widget.attrs['readonly'] = True  
+            field.widget.attrs['disabled'] = True  
+            if field.widget.input_type == "checkbox":
+                 field.label_suffix = ''
+
+class UserMedicalInformationForm(forms.ModelForm):
+    class Meta:
+        model = UserMedicalInformation
         fields = '__all__'
         exclude = ['index']
     def __init__(self, *args, **kwargs):
-        super(UserInformationForm, self).__init__(*args, **kwargs)
-        # Make all fields read-only by disabling them
+        super(UserMedicalInformationForm, self).__init__(*args, **kwargs)
         for field in self.fields.values():
-            field.widget.attrs['readonly'] = True  # Make fields read-only
-            field.widget.attrs['disabled'] = True  # Disable fields for further protection
-    """  
-    widgets = {
-        'full_name': forms.TextInput(attrs={'class': 'custom-form-class'}),
-        'religion': forms.TextInput(attrs={'class': 'custom-form-class'}),
-        'sex': forms.TextInput(attrs={'class': 'custom-form-class'}),
-        'marital_status': forms.TextInput(attrs={'class': 'custom-form-class'}),
-        'date_of_birth': forms.DateInput(attrs={'class': 'custom-form-class'}),
-        'social_security_number': forms.TextInput(attrs={'class': 'custom-form-class'}),
-        'address': forms.TextInput(attrs={'class': 'custom-form-class'}),
-        'country': forms.TextInput(attrs={'class': 'custom-form-class'}),
-        'province': forms.TextInput(attrs={'class': 'custom-form-class'}),
-        'city': forms.TextInput(attrs={'class': 'custom-form-class'}),
-        'contact_number': forms.TextInput(attrs={'class': 'custom-form-class'}),
-        'zip_code': forms.TextInput(attrs={'class': 'custom-form-class'}),
-        'mother_name': forms.TextInput(attrs={'class': 'custom-form-class'}),
-    }
-    """ 
+            field.widget.attrs['readonly'] = True  
+            field.widget.attrs['disabled'] = True  
