@@ -219,7 +219,6 @@ class UserGeneralInformation(models.Model):
     isHospitalEmp = models.BooleanField(_("Hospital Employee?"), blank= False, null= True)
     isNoPersonalDataRelease = models.BooleanField(_("No personal data released to other parties?"), blank= False, null= True)
     isNoCompanyCommunication = models.BooleanField(_("No communication from company?"), blank= False, null= True)
-    isFictitiousBirthDate = models.BooleanField(_("Fictitious Birth Date"), blank= False, null= True)
     isConfidentialPatientRecord = models.BooleanField(_("Confidential Patient Record"), blank= False, null= True)
     
 class UserMedicalInformation(models.Model):
