@@ -248,14 +248,15 @@ class ProposedPasswordGeneration:
         for token in token_list:
             for chars, char_type in token.items():
                 chance:float = (random.randint(0,100) / 100)
-                if chance <= 0.1:
+                if chance <= 0.1 and len(chars) <=4:
                     candidate_honey_token_list.append(chars)
                 elif char_type == "Letters":
                     if len(chars) == 1:
-                        replacement_char = generate_replacement_char(chars, self.alphabet_lower_list)
+                        replacement_char:str = generate_replacement_char(chars, self.alphabet_lower_list)
                         candidate_honey_token_list.append(replacement_char)
                     elif len(chars) > 1:
-                        replacement_word = generate_replacement_word_same_length(chars)
+                        replacement_word:str = generate_replacement_word_same_length(chars)
+                        replacement_word = replacement_word.lower()
                         if replacement_word is None:
                             candidate_honey_token_list.append(chars)
                         else:
@@ -265,6 +266,7 @@ class ProposedPasswordGeneration:
                             candidate_honey_token_list.append(replacement_word)
                 elif char_type == "Digit":
                     replacement_char = generate_replacement_char(chars, self.digit_list)
+                    
                     candidate_honey_token_list.append(replacement_char)
                 elif char_type == "Symbol":
                     replacement_char = generate_replacement_char(chars, self.symbol_list)
@@ -274,7 +276,6 @@ class ProposedPasswordGeneration:
                 
         # Join each token and restore capitalization.                     
         honey_password_candidate = "".join(candidate_honey_token_list)
-        print(candidate_honey_token_list)
         honey_password_candidate = restore_capitalization(honey_password_candidate)
         
         return honey_password_candidate
@@ -414,7 +415,7 @@ class ExistingPasswordGeneration:
             
     
 if __name__ == "__main__": # L3GendtyouSer4!rE4l2%7*
-    instance = ProposedPasswordGeneration("L3GendtyouSer4!rE4l2%7")
+    instance = ProposedPasswordGeneration("LEGENDARYb4by")
     honey_word_list, sugarindex = instance.generate_honeyword_list()
     print(f"The honey word list is {honey_word_list}, and the sugarindex is {sugarindex}")
 
