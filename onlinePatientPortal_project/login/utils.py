@@ -8,6 +8,7 @@ from pathlib import Path
 from django.conf import settings
 import requests
 import math
+import textdistance
 
 # Run only Once
 #import nltk 
@@ -15,8 +16,8 @@ import math
     
 class ProposedPasswordGeneration:
     def __init__(self, password: str):
-        self.threshold_levenshtein:int = 1
-        self.threshold_euclidean:float = 1.0
+        self.threshold_levenshtein:int = 3
+        self.threshold_euclidean:float = 3.0
         
         self.password:str = password
         self.num_of_honeywords:int = 5 # How many honeywords to be generated? E.g 5 honeywords -> 4 sweet words, 1 sugar word.
@@ -31,8 +32,8 @@ class ProposedPasswordGeneration:
         # Define keyboard layout positions (x, y) by row for QWERTY keyboard
         self.keyboard_layout = {
             # Row 1: Top row (Numbers and symbols)
-            '`': (1, 1),'1': (0, 0), '2': (1, 0), '3': (2, 0), '4': (3, 0), '5': (4, 0), '6': (5, 0), '7': (6, 0), '8': (7, 0), '9': (8, 0), '0': (9, 0), '-': (9, 0), '=': (10, 0),
-            '~': (0, 1),'!': (0, 0), '@': (1, 0), '#': (2, 0), '$': (3, 0), '%': (4, 0), '^': (5, 0), '&': (6, 0), '*': (7, 0), '(': (8, 0), ')': (9, 0), '_': (9, 0), '+': (10, 0),
+            '`': (-1, 0),'1': (0, 0), '2': (1, 0), '3': (2, 0), '4': (3, 0), '5': (4, 0), '6': (5, 0), '7': (6, 0), '8': (7, 0), '9': (8, 0), '0': (9, 0), '-': (9, 0), '=': (10, 0),
+            '~': (-1, 0),'!': (0, 0), '@': (1, 0), '#': (2, 0), '$': (3, 0), '%': (4, 0), '^': (5, 0), '&': (6, 0), '*': (7, 0), '(': (8, 0), ')': (9, 0), '_': (9, 0), '+': (10, 0),
             
             # Row 2: QWERTY row
             'q': (0, 1), 'w': (1, 1), 'e': (2, 1), 'r': (3, 1), 't': (4, 1), 'y': (5, 1), 'u': (6, 1), 'i': (7, 1), 'o': (8, 1), 'p': (9, 1), '[': (10, 1), ']': (11, 1), '\\': (12, 1),
@@ -277,6 +278,7 @@ class ProposedPasswordGeneration:
         # Join each token and restore capitalization.                     
         honey_password_candidate = "".join(candidate_honey_token_list)
         honey_password_candidate = restore_capitalization(honey_password_candidate)
+
         
         return honey_password_candidate
         
@@ -284,7 +286,9 @@ class ProposedPasswordGeneration:
         self.capital_indexes, token_list = self.tokenize()
         while len(self.honeyword_list) < self.num_of_honeywords-1:
             honey_password_candidate = self.assemble_honey_password(token_list) # Assemble token list, Euclidean Assessment, Recapitalize
-            lev_distance_between_candidate_and_orig = levenshtein_distance(honey_password_candidate, self.password) # Levenshtein Assessment
+            #lev_distance_between_candidate_and_orig = levenshtein_distance(honey_password_candidate, self.password) # Levenshtein Assessment
+            lev_distance_between_candidate_and_orig = textdistance.damerau_levenshtein(honey_password_candidate, self.password) # Damerau-Levenshtein Assessment
+            print(lev_distance_between_candidate_and_orig, levenshtein_distance(honey_password_candidate, self.password))
             if lev_distance_between_candidate_and_orig > self.threshold_levenshtein:
                 self.honeyword_list.append(honey_password_candidate)
             else:
@@ -415,7 +419,9 @@ class ExistingPasswordGeneration:
             
     
 if __name__ == "__main__": # L3GendtyouSer4!rE4l2%7*
-    instance = ProposedPasswordGeneration("LEGENDARYb4by")
+    # instance = ExistingPasswordGeneration("Ryan123")
+    # honey_word_list, sugarindex = instance.choose_method(1)
+    instance = ProposedPasswordGeneration("Ryan123")
     honey_word_list, sugarindex = instance.generate_honeyword_list()
     print(f"The honey word list is {honey_word_list}, and the sugarindex is {sugarindex}")
 
