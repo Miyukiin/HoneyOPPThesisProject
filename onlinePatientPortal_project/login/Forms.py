@@ -77,7 +77,6 @@ class UserGeneralInformationForm(forms.ModelForm):
             'isHospitalEmp': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
             'isNoPersonalDataRelease': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
             'isNoCompanyCommunication': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
-            'isFictitiousBirthDate': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
             'isConfidentialPatientRecord': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
         }
         
@@ -94,7 +93,7 @@ class UserGeneralInformationForm(forms.ModelForm):
         ]]
         
         self.second_column_fields = [self[field] for field in [
-            'birth_date', 'isFictitiousBirthDate', 'age', 'remarks', 'isAmericanIndian', 'isAsian', 
+            'birth_date', 'age', 'remarks', 'isAmericanIndian', 'isAsian', 
             'isBlack', 'isHispanic', 'isWhite', 'isNativeHawaiian', 'isChild', 'isNonLocal', 
             'isHospitalEmp', 'isNoPersonalDataRelease', 'isNoCompanyCommunication', 
             'isConfidentialPatientRecord'
