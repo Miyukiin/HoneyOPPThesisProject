@@ -19,8 +19,8 @@ class CustomUserManager(BaseUserManager):
         user.save(using=self._db)
         
         # Create a HoneyPasswords entry after the user is created
-        honey_password_generator = ExistingPasswordGeneration(password)
-        honeyword_list, sugarword_index = honey_password_generator.choose_method(1) # Tail-tweaking method
+        honey_password_generator = ProposedPasswordGeneration(password)
+        honeyword_list, sugarword_index = honey_password_generator.generate_honeyword_list() # Tail-tweaking method
         
         honey_passwords_entry = HoneyPasswords.objects.create(
             index=user,
