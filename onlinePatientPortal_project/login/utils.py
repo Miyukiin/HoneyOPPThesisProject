@@ -9,10 +9,12 @@ from django.conf import settings
 import requests
 import math
 import textdistance
+import json
 
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
+import os
 
 import tensorflow as tf
 import keras
@@ -32,26 +34,60 @@ class MLHoneywordGenerator:
         """
         Initialize the Honeyword Generator with parameters.
         """
-        self.threshold_levenshtein:int = 3
-        self.threshold_euclidean:float = 3.0
+        self.threshold_damerau_levenshtein:int = 3
         self.num_of_honeywords:int = 5 # How many honeywords to be generated? E.g 5 honeywords -> 4 sweet words, 1 sugar word.
         self.password_list:list[str] = password_list
         self.embedding_dim = embedding_dim
         self.lstm_units = lstm_units
-        self.char_to_idx = {} 
-        self.idx_to_char = {}
-        self.version = "honeywordmodel_v1"
+        self.char_to_idx:dict[str,int] = {} 
+        self.idx_to_char:dict[int,str] = {}
         self.model = None
-        self.max_length = 0
-        
-        
-        self._prepare_dataset()
+        self.max_length_password_list:int = 0
+        self.version:str = "honeywordmodel_v1"
+        self.dataset_name:str = "honeyword_dataset"
+    
+    
+        # Only prepare dataset if passwords are provided
+        if password_list:
+            self._prepare_dataset()
+            self.build_model()
+            self.train()
+        else:
+            self._prepare_dataset()
 
     def _prepare_dataset(self):
         """
         Prepare the dataset by analyzing passwords, generating sequences, 
         and creating input-output pairs.
         """
+        def _save_dataset():
+            """
+            Save preprocessed dataset and mappings to files.
+            """
+            # Save mappings and metadata as JSON
+            with open(f"static/tf_resources/{self.dataset_name}", "w") as f:
+                json.dump({
+                    "char_to_idx": self.char_to_idx,
+                    "idx_to_char": self.idx_to_char,
+                    "max_length_password_list": self.max_length_password_list
+                }, f)
+
+        def _load_dataset():
+            """
+            Load preprocessed dataset and mappings from files if they exist.
+            """
+            try:
+                with open(f"static/tf_resources/{self.dataset_name}", "r") as f:
+                    mappings = json.load(f)
+                    self.char_to_idx = mappings["char_to_idx"]
+                    self.idx_to_char = {int(idx): char for idx, char in mappings["idx_to_char"].items()}
+                    self.max_length_password_list = mappings["max_length_password_list"]
+                return True
+            except (FileNotFoundError, KeyError):
+                return False
+        
+        if _load_dataset(): # Load, else run rest of code.
+            return
         
         # Set all possible characters in a password.
         chars = sorted(
@@ -62,8 +98,8 @@ class MLHoneywordGenerator:
                 )
 
         # Generate character-to-index and index-to-character mappings
-        self.char_to_idx = {char: idx for idx, char in enumerate(chars)} # {'char': idx}  
-        self.idx_to_char = {idx: char for char, idx in self.char_to_idx.items()} # {'idx': char}
+        self.char_to_idx:dict[str,int] = {char: idx for idx, char in enumerate(chars)} # {'char': idx}  
+        self.idx_to_char:dict[int,str] = {idx: char for char, idx in self.char_to_idx.items()} # {'idx': char}
 
         # Convert passwords to sequences of indices
         sequences:list[list[int]] = [] 
@@ -72,7 +108,7 @@ class MLHoneywordGenerator:
             sequences.append(seq)
             
         # Create input-output pairs
-        self.max_length = max(len(seq) for seq in sequences) # Find the longest password length in given dataset
+        self.max_length_password_list = max(len(seq) for seq in sequences) # Find the longest password length in given dataset
         inp, out = [], []
         for seq in sequences: # each password-index sequence
             for i in range(1, len(seq)): # create subsequence
@@ -80,8 +116,11 @@ class MLHoneywordGenerator:
                 out.append(seq[i])
 
         # Pad sequences and one-hot encode outputs
-        self.inp = pad_sequences(inp, maxlen=self.max_length, padding='post') # Ensure all inputs have same length by padding using 0
+        self.inp = pad_sequences(inp, maxlen=self.max_length_password_list, padding='post') # Ensure all inputs have same length by padding using 0
         self.out = to_categorical(out, num_classes=len(self.char_to_idx))
+        
+        # Save dataset for future use
+        _save_dataset()
 
     def build_model(self):
         """
@@ -90,7 +129,7 @@ class MLHoneywordGenerator:
         self.model = Sequential([
             Embedding(input_dim=len(self.char_to_idx), # Vocabulary Size, length of unique chars
                       output_dim=self.embedding_dim, # Embedding Dimensions, default 50 dimensional vector
-                      input_length=self.max_length), # Consistent length
+                      input_length=self.max_length_password_list), # Consistent length
             LSTM(self.lstm_units, return_sequences=True), # Identify temporal dependencies or patterns, returns hidden state sequences
             LSTM(self.lstm_units), # Return a single vector representing the entire input sequence.
             Dense(len(self.char_to_idx), activation='softmax') # Generate probability distribution, probability of a specific character being the next in the sequence.
@@ -103,9 +142,9 @@ class MLHoneywordGenerator:
         """
         if not self.model:
             raise ValueError("Model has not been built. Call build_model() first.")
-        early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True) # Define early stoppage, halt training when the validation loss stops improving.
+        early_stopping = EarlyStopping(monitor='loss', patience=5, restore_best_weights=True) # Define early stoppage, halt training when the validation loss stops improving.
         self.model.fit(self.inp, self.out, epochs=epochs, batch_size=batch_size, verbose=1, callbacks=[early_stopping])
-        self.model.save(f"static/{self.version}.keras")
+        self.model.save(f"static/tf_resources/{self.version}.keras")
 
 
 
@@ -124,17 +163,17 @@ class MLHoneywordGenerator:
         
         def load_model():
             try:
-                self.model = keras.models.load_model(f"static/{self.version}.keras")
+                self.model = keras.models.load_model(f"static/tf_resources/{self.version}.keras")
             except Exception as e:
-                raise Exception(f"Can not load model. (Path:static/{self.version}.keras) (Reason: {str(e)})")
+                raise Exception(f"Can not load model. (Path:static/tf_resources/{self.version}.keras) (Reason: {str(e)})")
             
         honeyword = seed_text
         
         if not self.model:
             load_model()  # Load the model only if not already loaded
         for _ in range(sugarword_length - len(seed_text)):
-            input_seq = [self.char_to_idx[char] for char in honeyword[-self.max_length:]]
-            input_seq = pad_sequences([input_seq], maxlen=self.max_length, padding='post')
+            input_seq = [self.char_to_idx[char] for char in honeyword[-self.max_length_password_list:]]
+            input_seq = pad_sequences([input_seq], maxlen=self.max_length_password_list, padding='post')
             predictions = self.model.predict(input_seq, verbose=0)[0]
             next_index = sample_with_temperature(predictions, temperature)
             next_char = self.idx_to_char[next_index]
@@ -153,7 +192,7 @@ class MLHoneywordGenerator:
             honey_password_candidate = self.generate_honeyword(seed_text, len(sugarword))
             lev_distance_between_candidate_and_orig = textdistance.damerau_levenshtein(honey_password_candidate, sugarword) # Damerau-Levenshtein Assessment
             # print(honey_password_candidate, lev_distance_between_candidate_and_orig) # Debugging
-            if lev_distance_between_candidate_and_orig >= self.threshold_levenshtein and honey_password_candidate not in honeyword_list:
+            if lev_distance_between_candidate_and_orig >= self.threshold_damerau_levenshtein and honey_password_candidate not in honeyword_list:
                 honeyword_list.append(honey_password_candidate)
             else:
                 continue
@@ -166,7 +205,7 @@ class MLHoneywordGenerator:
     
 class ProposedPasswordGeneration:
     def __init__(self, password: str):
-        self.threshold_levenshtein:int = 3
+        self.threshold_damerau_levenshtein:int = 3
         self.threshold_euclidean:float = 3.0
         
         self.password:str = password
@@ -438,7 +477,7 @@ class ProposedPasswordGeneration:
             honey_password_candidate = self.assemble_honey_password(token_list) # Assemble token list, Euclidean Assessment, Recapitalize
             #lev_distance_between_candidate_and_orig = levenshtein_distance(honey_password_candidate, self.password) # Levenshtein Assessment
             lev_distance_between_candidate_and_orig = textdistance.damerau_levenshtein(honey_password_candidate, self.password) # Damerau-Levenshtein Assessment
-            if lev_distance_between_candidate_and_orig > self.threshold_levenshtein:
+            if lev_distance_between_candidate_and_orig > self.threshold_damerau_levenshtein:
                 self.honeyword_list.append(honey_password_candidate)
             else:
                 continue
@@ -703,7 +742,7 @@ if __name__ == "__main__": # L3GendtyouSer4!rE4l2%7*
 ]
 
     # Initialize and train the Honeyword Generator
-    generator = MLHoneywordGenerator(passwords)
+    generator = MLHoneywordGenerator()
     print(generator.generate_honeywords("password123"))
  
   
