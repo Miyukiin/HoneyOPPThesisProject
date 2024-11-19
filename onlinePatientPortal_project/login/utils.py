@@ -10,9 +10,159 @@ import requests
 import math
 import textdistance
 
+import tensorflow as tf
+from tensorflow import keras
+import numpy as np
+
+import tensorflow as tf
+import keras
+from keras.src.utils.sequence_utils import pad_sequences
+from keras.src.utils import to_categorical
+from keras.src.models import Sequential
+from keras.src.layers import LSTM, Dense, Embedding
+from keras.src.callbacks import EarlyStopping
+
+
 # Run only Once
 #import nltk 
 #nltk.download('wordnet')
+
+class MLHoneywordGenerator:
+    def __init__(self, password_list:list[str]=None, embedding_dim=50, lstm_units=100):
+        """
+        Initialize the Honeyword Generator with parameters.
+        """
+        self.threshold_levenshtein:int = 3
+        self.threshold_euclidean:float = 3.0
+        self.num_of_honeywords:int = 5 # How many honeywords to be generated? E.g 5 honeywords -> 4 sweet words, 1 sugar word.
+        self.password_list:list[str] = password_list
+        self.embedding_dim = embedding_dim
+        self.lstm_units = lstm_units
+        self.char_to_idx = {} 
+        self.idx_to_char = {}
+        self.version = "honeywordmodel_v1"
+        self.model = None
+        self.max_length = 0
+        
+        
+        self._prepare_dataset()
+
+    def _prepare_dataset(self):
+        """
+        Prepare the dataset by analyzing passwords, generating sequences, 
+        and creating input-output pairs.
+        """
+        
+        # Set all possible characters in a password.
+        chars = sorted(
+                    list(string.ascii_uppercase) + 
+                    list(string.ascii_lowercase) + 
+                    list(string.punctuation) + 
+                    list(string.digits)
+                )
+
+        # Generate character-to-index and index-to-character mappings
+        self.char_to_idx = {char: idx for idx, char in enumerate(chars)} # {'char': idx}  
+        self.idx_to_char = {idx: char for char, idx in self.char_to_idx.items()} # {'idx': char}
+
+        # Convert passwords to sequences of indices
+        sequences:list[list[int]] = [] 
+        for password in self.password_list:
+            seq:list[int] = [self.char_to_idx[char] for char in password] # example mapping is word = [25,23,52,32]
+            sequences.append(seq)
+            
+        # Create input-output pairs
+        self.max_length = max(len(seq) for seq in sequences) # Find the longest password length in given dataset
+        inp, out = [], []
+        for seq in sequences: # each password-index sequence
+            for i in range(1, len(seq)): # create subsequence
+                inp.append(seq[:i])
+                out.append(seq[i])
+
+        # Pad sequences and one-hot encode outputs
+        self.inp = pad_sequences(inp, maxlen=self.max_length, padding='post') # Ensure all inputs have same length by padding using 0
+        self.out = to_categorical(out, num_classes=len(self.char_to_idx))
+
+    def build_model(self):
+        """
+        Build the LSTM model for honeyword generation.
+        """
+        self.model = Sequential([
+            Embedding(input_dim=len(self.char_to_idx), # Vocabulary Size, length of unique chars
+                      output_dim=self.embedding_dim, # Embedding Dimensions, default 50 dimensional vector
+                      input_length=self.max_length), # Consistent length
+            LSTM(self.lstm_units, return_sequences=True), # Identify temporal dependencies or patterns, returns hidden state sequences
+            LSTM(self.lstm_units), # Return a single vector representing the entire input sequence.
+            Dense(len(self.char_to_idx), activation='softmax') # Generate probability distribution, probability of a specific character being the next in the sequence.
+        ])
+        self.model.compile(optimizer='adam', loss='categorical_crossentropy') # Specify optimizer and loss function
+
+    def train(self, epochs=100, batch_size=32):
+        """
+        Train the LSTM model.
+        """
+        if not self.model:
+            raise ValueError("Model has not been built. Call build_model() first.")
+        early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True) # Define early stoppage, halt training when the validation loss stops improving.
+        self.model.fit(self.inp, self.out, epochs=epochs, batch_size=batch_size, verbose=1, callbacks=[early_stopping])
+        self.model.save(f"static/{self.version}.keras")
+
+
+
+    def generate_honeyword(self, seed_text:str, sugarword_length:int, temperature=0.7) -> str:
+        """
+        Generate a honeyword based on the seed text with added randomness.
+        """
+        def sample_with_temperature(predictions, temperature=1.0):
+            """
+            Sample an index from a probability distribution with temperature scaling.
+            """
+            predictions = np.log(predictions + 1e-8) / temperature  # Avoid log(0)
+            exp_preds = np.exp(predictions)
+            probabilities = exp_preds / np.sum(exp_preds)
+            return np.random.choice(len(probabilities), p=probabilities)
+        
+        def load_model():
+            try:
+                self.model = keras.models.load_model(f"static/{self.version}.keras")
+            except Exception as e:
+                raise Exception(f"Can not load model. (Path:static/{self.version}.keras) (Reason: {str(e)})")
+            
+        honeyword = seed_text
+        
+        if not self.model:
+            load_model()  # Load the model only if not already loaded
+        for _ in range(sugarword_length - len(seed_text)):
+            input_seq = [self.char_to_idx[char] for char in honeyword[-self.max_length:]]
+            input_seq = pad_sequences([input_seq], maxlen=self.max_length, padding='post')
+            predictions = self.model.predict(input_seq, verbose=0)[0]
+            next_index = sample_with_temperature(predictions, temperature)
+            next_char = self.idx_to_char[next_index]
+            honeyword += next_char
+        return honeyword
+
+    def generate_honeywords(self, sugarword) -> tuple[list,int]:
+        """
+        Generate multiple honeywords for a given sugarword.
+        """
+        seed_text = sugarword[:2]  # Start with a seed text
+        honeyword_list = []
+
+        while len(honeyword_list) < self.num_of_honeywords-1:
+            
+            honey_password_candidate = self.generate_honeyword(seed_text, len(sugarword))
+            lev_distance_between_candidate_and_orig = textdistance.damerau_levenshtein(honey_password_candidate, sugarword) # Damerau-Levenshtein Assessment
+            # print(honey_password_candidate, lev_distance_between_candidate_and_orig) # Debugging
+            if lev_distance_between_candidate_and_orig >= self.threshold_levenshtein and honey_password_candidate not in honeyword_list:
+                honeyword_list.append(honey_password_candidate)
+            else:
+                continue
+        
+        honeyword_list.append(sugarword)
+        random.shuffle(honeyword_list) # Randomize positions
+        sugarword_index = honeyword_list.index(sugarword) # Find the index of the sugarword for the API HoneyChecker 
+        return honeyword_list, sugarword_index
+    
     
 class ProposedPasswordGeneration:
     def __init__(self, password: str):
@@ -29,14 +179,14 @@ class ProposedPasswordGeneration:
         self.honeyword_list:list[str] = []
         self.capital_indexes:list[int] = []
 
-        # Define keyboard layout positions (x, y) by row for QWERTY keyboard
+        # Define keyboard layout positions (x, out) by row for QWERTY keyboard
         self.keyboard_layout = {
             # Row 1: Top row (Numbers and symbols)
             '`': (-1, 0),'1': (0, 0), '2': (1, 0), '3': (2, 0), '4': (3, 0), '5': (4, 0), '6': (5, 0), '7': (6, 0), '8': (7, 0), '9': (8, 0), '0': (9, 0), '-': (9, 0), '=': (10, 0),
             '~': (-1, 0),'!': (0, 0), '@': (1, 0), '#': (2, 0), '$': (3, 0), '%': (4, 0), '^': (5, 0), '&': (6, 0), '*': (7, 0), '(': (8, 0), ')': (9, 0), '_': (9, 0), '+': (10, 0),
             
             # Row 2: QWERTY row
-            'q': (0, 1), 'w': (1, 1), 'e': (2, 1), 'r': (3, 1), 't': (4, 1), 'y': (5, 1), 'u': (6, 1), 'i': (7, 1), 'o': (8, 1), 'p': (9, 1), '[': (10, 1), ']': (11, 1), '\\': (12, 1),
+            'q': (0, 1), 'w': (1, 1), 'e': (2, 1), 'r': (3, 1), 't': (4, 1), 'out': (5, 1), 'u': (6, 1), 'i': (7, 1), 'o': (8, 1), 'p': (9, 1), '[': (10, 1), ']': (11, 1), '\\': (12, 1),
             'Q': (0, 1), 'W': (1, 1), 'E': (2, 1), 'R': (3, 1), 'T': (4, 1), 'Y': (5, 1), 'U': (6, 1), 'I': (7, 1), 'O': (8, 1), 'P': (9, 1), '{': (10, 1), '}': (11, 1), '|': (12, 1),
             
             # Row 3: Home row
@@ -45,7 +195,7 @@ class ProposedPasswordGeneration:
             
             # Row 4: Bottom row
             'z': (0, 3), 'x': (1, 3), 'c': (2, 3), 'v': (3, 3), 'b': (4, 3), 'n': (5, 3), 'm': (6, 3), ',': (7, 3), '.': (8, 3), '/': (9, 3),
-            'Z': (0, 3), 'X': (1, 3), 'C': (2, 3), 'V': (3, 3), 'B': (4, 3), 'N': (5, 3), 'M': (6, 3), '<': (7, 3), '>': (8, 3), '?': (9, 3),
+            'Z': (0, 3), 'inp': (1, 3), 'C': (2, 3), 'V': (3, 3), 'B': (4, 3), 'N': (5, 3), 'M': (6, 3), '<': (7, 3), '>': (8, 3), '?': (9, 3),
         }
     
     # Tokenize into Letters, Digits and Symbols. Replace with Appropriate. Assess Euclidean and Levensh, Return.
@@ -288,7 +438,6 @@ class ProposedPasswordGeneration:
             honey_password_candidate = self.assemble_honey_password(token_list) # Assemble token list, Euclidean Assessment, Recapitalize
             #lev_distance_between_candidate_and_orig = levenshtein_distance(honey_password_candidate, self.password) # Levenshtein Assessment
             lev_distance_between_candidate_and_orig = textdistance.damerau_levenshtein(honey_password_candidate, self.password) # Damerau-Levenshtein Assessment
-            print(lev_distance_between_candidate_and_orig, levenshtein_distance(honey_password_candidate, self.password))
             if lev_distance_between_candidate_and_orig > self.threshold_levenshtein:
                 self.honeyword_list.append(honey_password_candidate)
             else:
@@ -417,13 +566,147 @@ class ExistingPasswordGeneration:
                 raise Exception("Choose Method. Choice not in range.")
 
             
-    
+
 if __name__ == "__main__": # L3GendtyouSer4!rE4l2%7*
+    """
     # instance = ExistingPasswordGeneration("Ryan123")
     # honey_word_list, sugarindex = instance.choose_method(1)
     instance = ProposedPasswordGeneration("Ryan123")
     honey_word_list, sugarindex = instance.generate_honeyword_list()
     print(f"The honey word list is {honey_word_list}, and the sugarindex is {sugarindex}")
+    """
+    
+    
+    passwords = [
+    "Password123",
+    "Pa$$word123",
+    "password_123",
+    "password123!",
+    "passw0rd123",
+    "passw@rd123",
+    "password#123",
+    "p@ssword123",
+    "password1234",
+    "password12345",
+    "password_1234",
+    "Password_123",
+    "pass123word",
+    "pass-word123",
+    "pass123",
+    "pass_word123",
+    "password!123",
+    "password123$",
+    "password12#",
+    "pa$$w0rd123",
+    "pass123word456",
+    "password@123",
+    "password2023",
+    "p@ss123",
+    "password.123",
+    "password1.23",
+    "pass1word123",
+    "password%123",
+    "Password2024",
+    "p@ssw0rd",
+    "password+123",
+    "password#2023",
+    "pass_123word",
+    "password^123",
+    "password~123",
+    "pass.word123",
+    "password*123",
+    "pa$$word2023",
+    "P@ssword123!",
+    "password123456",
+    "password#45",
+    "pass!word",
+    "password-2023",
+    "passw0rd!23",
+    "password#12",
+    "p@$$word",
+    "pass@word123",
+    "password$$123",
+    "password123_",
+    "password$456",
+    "p@ssw0rd23",
+    "password-123",
+    "password-1-2-3",
+    "password!@123",
+    "pass2023word",
+    "password+@123",
+    "pass_word",
+    "password!2023",
+    "P@ssword_23",
+    "password%45",
+    "p@ss!word",
+    "password~2023",
+    "password=123",
+    "password2023!",
+    "Password!456",
+    "P@ssword!@#",
+    "password.2023",
+    "password@@123",
+    "password123#",
+    "p@ssword+45",
+    "password1!23",
+    "password!#2023",
+    "password^456",
+    "Password#1234",
+    "password@#$123",
+    "password5678",
+    "password+word",
+    "password&123",
+    "pass@word_45",
+    "p@$$word_123",
+    "password123##",
+    "password-12-34",
+    "Password@2023",
+    "password!@#",
+    "password456",
+    "password99",
+    "Password__123",
+    "password#$$",
+    "passw0rd@45",
+    "p@ssword!!",
+    "password_@@",
+    "p@$$w0rd23",
+    "pass123word!!",
+    "password@#$45",
+    "Password~12",
+    "password12345678",
+    "password!@#$%^",
+    "password__99",
+    "password__++"
+    "passlord145", "passgord158", "paskbord127", "pashw0rd250",
+    "password123", "admin123", "welcome123", "sunshine", "iloveyou", "monkey123", "letmein", "football1", "baseball123",
+    "dragonfly", "princess1", "chocolate", "rainbow123", "flower567", "summer2023", "hunter2", "qwerty123", "trustno1",
+    "strongpass", "secure456", "magic42", "tech2023", "superman123", "spiderman456", "ironman789", "batman123",
+    "joker987", "coolpass1", "opensesame", "knight123", "wizard456", "galaxy987", "computer1", "laptop123",
+    "smartphone1", "cookie123", "candy987", "icecream1", "chocolate12", "coffeelover", "tea12345", "orange456",
+    "pineapple9", "strawberry1", "blueberry1", "raspberry2", "papaya123", "mango456", "grape789", "peach321",
+    "applepie", "cherry123", "watermelon", "banana123", "kiwi789", "dragonfruit", "guava123", "coconut456",
+    "pomegranate", "starfruit1", "melon987", "lychee123", "avocados123", "blackberry2", "passw0rd123", "pa$$word1",
+    "pa55w0rd", "admin@123", "welcome@2023", "monkey@123", "il0veyou", "pass12345", "footballer1", "baseballer1",
+    "drag0nfly1", "princess42", "chocol@te", "r@inb0w12", "summ3r123", "h@unter2", "qwerty2024", "trust@n0one",
+    "str0ngpass", "s3cur3p@ss", "mag!cal123", "tec#pass", "h0neycomb", "bee@1234", "bears567", "tigers789",
+    "lions123", "panther456", "leopards1", "jaguar2023", "cats987", "dogs1234", "puppies789", "kittens456",
+    "wildcat123", "eagles567", "hawks1234", "falcons789", "sparrows456", "owls1234", "hummingbird1", "penguins789",
+    "zebras123", "rhinos456", "elephants789", "whales123", "dolphins456", "sharks789", "coral1234", "ocean5678",
+    "seawaves", "currents123", "windsurf1", "paraglide1", "skydive123", "bungee456", "scuba789", "freefall123",
+    "iceberg456", "arctic123", "antarctica1", "penguin987", "iceberg123", "glaciers456", "polar123", "igloo789",
+    "aurora456", "borealis123", "nightstar1", "starshine1", "moonlight1", "sunlight456", "sunburn789", "sunblock1",
+    "seashore1", "sandcastle123", "coconuts456", "hibiscus123", "palmtrees", "surfsup123", "chillout123", "hammock123",
+    "tanlines1", "umbrella1", "sunscreen123", "reefcoral1", "deepsea456", "undersea789", "reefshark1", "angelfish123",
+    "butterfly1", "marinelife1", "shipwreck1", "treasurer123", "piratelife1", "parrot123", "anchor789", "voyage456",
+    "compass123", "explorer1", "adventurer123", "treasure123", "archeology1", "discovery456", "fossil789",
+    "dinosaur123", "jurassic456", "extinct123", "evolution1", "ancestors123", "cavepainting1"
+]
+
+    # Initialize and train the Honeyword Generator
+    generator = MLHoneywordGenerator(passwords)
+    print(generator.generate_honeywords("password123"))
+ 
+  
 
     
    
