@@ -625,7 +625,7 @@ if __name__ == "__main__": # L3GendtyouSer4!rE4l2%7*
     print(f"The honey word list is {honey_word_list}, and the sugarindex is {sugarindex}")
     """
     
-    # Temporary
+    # Temporary, reads passwordlist to pass to honeywordgenerator
     passwords = []
     file_path = Path.cwd() / 'static' / 'phpbb-cleaned-up-listed-python.json'
     

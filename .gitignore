@@ -10,6 +10,9 @@ media
 onlinePatientPortal_project/login/static/password_list.txt
 onlinePatientPortal_project/login/static/phpbb-cleaned-up.txt
 
+# Large file ignore
+onlinePatientPortal_project/login/static/tf_resources/honeyword_dataset_phpbb.txt
+
 # Database
 db.cnf
 
