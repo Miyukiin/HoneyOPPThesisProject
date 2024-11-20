@@ -8,6 +8,7 @@ media
 
 # Password List Ignore
 onlinePatientPortal_project/login/static/password_list.txt
+onlinePatientPortal_project/login/static/phpbb-cleaned-up.txt
 
 # Database
 db.cnf

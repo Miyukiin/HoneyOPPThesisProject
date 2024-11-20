@@ -11,21 +11,21 @@ import math
 import textdistance
 import json
 
-import tensorflow as tf
-from tensorflow import keras
 import numpy as np
 import os
 
 import tensorflow as tf
 import keras
 from keras.src.utils.sequence_utils import pad_sequences
-from keras.src.utils import to_categorical
+from keras.src.utils import to_categorical, plot_model
 from keras.src.models import Sequential
 from keras.src.layers import LSTM, Dense, Embedding
 from keras.src.callbacks import EarlyStopping
 
 
-# Run only Once
+
+
+# Run only Once for proposed method
 #import nltk 
 #nltk.download('wordnet')
 
@@ -43,10 +43,13 @@ class MLHoneywordGenerator:
         self.idx_to_char:dict[int,str] = {}
         self.model = None
         self.max_length_password_list:int = 0
-        self.version:str = "honeywordmodel_v1"
-        self.dataset_name:str = "honeyword_dataset"
-    
-    
+        self.version:str = "honeyword_model_phpbb"
+        self.dataset_name:str = "honeyword_dataset_phpbb"
+        self.inp, self.out = None, None
+        self.epochs = 100
+        self.batch_size = 128
+        self.seed_text_length = 2 # Zero-based
+
         # Only prepare dataset if passwords are provided
         if password_list:
             self._prepare_dataset()
@@ -54,6 +57,9 @@ class MLHoneywordGenerator:
             self.train()
         else:
             self._prepare_dataset()
+    
+    def visualize_model(self):
+        plot_model(self.model, to_file='static/tf_resources/honey_model_architecture.png', show_shapes=True, show_layer_names=True)
 
     def _prepare_dataset(self):
         """
@@ -69,7 +75,9 @@ class MLHoneywordGenerator:
                 json.dump({
                     "char_to_idx": self.char_to_idx,
                     "idx_to_char": self.idx_to_char,
-                    "max_length_password_list": self.max_length_password_list
+                    "max_length_password_list": self.max_length_password_list,
+                    "inp": self.inp.tolist(),
+                    "out": self.out.tolist() 
                 }, f)
 
         def _load_dataset():
@@ -78,12 +86,14 @@ class MLHoneywordGenerator:
             """
             try:
                 with open(f"static/tf_resources/{self.dataset_name}", "r") as f:
-                    mappings = json.load(f)
+                    mappings: dict[str, dict | int | list]  = json.load(f)
                     self.char_to_idx = mappings["char_to_idx"]
                     self.idx_to_char = {int(idx): char for idx, char in mappings["idx_to_char"].items()}
                     self.max_length_password_list = mappings["max_length_password_list"]
+                    self.inp = np.array(mappings["inp"]) 
+                    self.out = np.array(mappings["out"])  
                 return True
-            except (FileNotFoundError, KeyError):
+            except (FileNotFoundError, KeyError, json.JSONDecodeError):
                 return False
         
         if _load_dataset(): # Load, else run rest of code.
@@ -91,8 +101,7 @@ class MLHoneywordGenerator:
         
         # Set all possible characters in a password.
         chars = sorted(
-                    list(string.ascii_uppercase) + 
-                    list(string.ascii_lowercase) + 
+                    list(string.ascii_letters)  + 
                     list(string.punctuation) + 
                     list(string.digits)
                 )
@@ -109,7 +118,8 @@ class MLHoneywordGenerator:
             
         # Create input-output pairs
         self.max_length_password_list = max(len(seq) for seq in sequences) # Find the longest password length in given dataset
-        inp, out = [], []
+        inp:list[list[int]] =  []
+        out:list[int] = []
         for seq in sequences: # each password-index sequence
             for i in range(1, len(seq)): # create subsequence
                 inp.append(seq[:i])
@@ -143,9 +153,9 @@ class MLHoneywordGenerator:
         if not self.model:
             raise ValueError("Model has not been built. Call build_model() first.")
         early_stopping = EarlyStopping(monitor='loss', patience=5, restore_best_weights=True) # Define early stoppage, halt training when the validation loss stops improving.
-        self.model.fit(self.inp, self.out, epochs=epochs, batch_size=batch_size, verbose=1, callbacks=[early_stopping])
+        self.model.fit(self.inp, self.out, epochs=self.epochs, batch_size=self.batch_size, verbose=1, callbacks=[early_stopping])
+        self.visualize_model() # Visualize Model
         self.model.save(f"static/tf_resources/{self.version}.keras")
-
 
 
     def generate_honeyword(self, seed_text:str, sugarword_length:int, temperature=0.7) -> str:
@@ -172,7 +182,7 @@ class MLHoneywordGenerator:
         if not self.model:
             load_model()  # Load the model only if not already loaded
         for _ in range(sugarword_length - len(seed_text)):
-            input_seq = [self.char_to_idx[char] for char in honeyword[-self.max_length_password_list:]]
+            input_seq = [self.char_to_idx[char] for char in honeyword[-self.max_length_password_list:]] # Negative Indexing in the case that entered Password Longer Case, and Password Shorter Case than longest assword in list.
             input_seq = pad_sequences([input_seq], maxlen=self.max_length_password_list, padding='post')
             predictions = self.model.predict(input_seq, verbose=0)[0]
             next_index = sample_with_temperature(predictions, temperature)
@@ -184,7 +194,7 @@ class MLHoneywordGenerator:
         """
         Generate multiple honeywords for a given sugarword.
         """
-        seed_text = sugarword[:2]  # Start with a seed text
+        seed_text = sugarword[:self.seed_text_length]  # Start with a seed text
         honeyword_list = []
 
         while len(honeyword_list) < self.num_of_honeywords-1:
@@ -615,135 +625,17 @@ if __name__ == "__main__": # L3GendtyouSer4!rE4l2%7*
     print(f"The honey word list is {honey_word_list}, and the sugarindex is {sugarindex}")
     """
     
+    # Temporary
+    passwords = []
+    file_path = Path.cwd() / 'static' / 'phpbb-cleaned-up-listed-python.json'
     
-    passwords = [
-    "Password123",
-    "Pa$$word123",
-    "password_123",
-    "password123!",
-    "passw0rd123",
-    "passw@rd123",
-    "password#123",
-    "p@ssword123",
-    "password1234",
-    "password12345",
-    "password_1234",
-    "Password_123",
-    "pass123word",
-    "pass-word123",
-    "pass123",
-    "pass_word123",
-    "password!123",
-    "password123$",
-    "password12#",
-    "pa$$w0rd123",
-    "pass123word456",
-    "password@123",
-    "password2023",
-    "p@ss123",
-    "password.123",
-    "password1.23",
-    "pass1word123",
-    "password%123",
-    "Password2024",
-    "p@ssw0rd",
-    "password+123",
-    "password#2023",
-    "pass_123word",
-    "password^123",
-    "password~123",
-    "pass.word123",
-    "password*123",
-    "pa$$word2023",
-    "P@ssword123!",
-    "password123456",
-    "password#45",
-    "pass!word",
-    "password-2023",
-    "passw0rd!23",
-    "password#12",
-    "p@$$word",
-    "pass@word123",
-    "password$$123",
-    "password123_",
-    "password$456",
-    "p@ssw0rd23",
-    "password-123",
-    "password-1-2-3",
-    "password!@123",
-    "pass2023word",
-    "password+@123",
-    "pass_word",
-    "password!2023",
-    "P@ssword_23",
-    "password%45",
-    "p@ss!word",
-    "password~2023",
-    "password=123",
-    "password2023!",
-    "Password!456",
-    "P@ssword!@#",
-    "password.2023",
-    "password@@123",
-    "password123#",
-    "p@ssword+45",
-    "password1!23",
-    "password!#2023",
-    "password^456",
-    "Password#1234",
-    "password@#$123",
-    "password5678",
-    "password+word",
-    "password&123",
-    "pass@word_45",
-    "p@$$word_123",
-    "password123##",
-    "password-12-34",
-    "Password@2023",
-    "password!@#",
-    "password456",
-    "password99",
-    "Password__123",
-    "password#$$",
-    "passw0rd@45",
-    "p@ssword!!",
-    "password_@@",
-    "p@$$w0rd23",
-    "pass123word!!",
-    "password@#$45",
-    "Password~12",
-    "password12345678",
-    "password!@#$%^",
-    "password__99",
-    "password__++"
-    "passlord145", "passgord158", "paskbord127", "pashw0rd250",
-    "password123", "admin123", "welcome123", "sunshine", "iloveyou", "monkey123", "letmein", "football1", "baseball123",
-    "dragonfly", "princess1", "chocolate", "rainbow123", "flower567", "summer2023", "hunter2", "qwerty123", "trustno1",
-    "strongpass", "secure456", "magic42", "tech2023", "superman123", "spiderman456", "ironman789", "batman123",
-    "joker987", "coolpass1", "opensesame", "knight123", "wizard456", "galaxy987", "computer1", "laptop123",
-    "smartphone1", "cookie123", "candy987", "icecream1", "chocolate12", "coffeelover", "tea12345", "orange456",
-    "pineapple9", "strawberry1", "blueberry1", "raspberry2", "papaya123", "mango456", "grape789", "peach321",
-    "applepie", "cherry123", "watermelon", "banana123", "kiwi789", "dragonfruit", "guava123", "coconut456",
-    "pomegranate", "starfruit1", "melon987", "lychee123", "avocados123", "blackberry2", "passw0rd123", "pa$$word1",
-    "pa55w0rd", "admin@123", "welcome@2023", "monkey@123", "il0veyou", "pass12345", "footballer1", "baseballer1",
-    "drag0nfly1", "princess42", "chocol@te", "r@inb0w12", "summ3r123", "h@unter2", "qwerty2024", "trust@n0one",
-    "str0ngpass", "s3cur3p@ss", "mag!cal123", "tec#pass", "h0neycomb", "bee@1234", "bears567", "tigers789",
-    "lions123", "panther456", "leopards1", "jaguar2023", "cats987", "dogs1234", "puppies789", "kittens456",
-    "wildcat123", "eagles567", "hawks1234", "falcons789", "sparrows456", "owls1234", "hummingbird1", "penguins789",
-    "zebras123", "rhinos456", "elephants789", "whales123", "dolphins456", "sharks789", "coral1234", "ocean5678",
-    "seawaves", "currents123", "windsurf1", "paraglide1", "skydive123", "bungee456", "scuba789", "freefall123",
-    "iceberg456", "arctic123", "antarctica1", "penguin987", "iceberg123", "glaciers456", "polar123", "igloo789",
-    "aurora456", "borealis123", "nightstar1", "starshine1", "moonlight1", "sunlight456", "sunburn789", "sunblock1",
-    "seashore1", "sandcastle123", "coconuts456", "hibiscus123", "palmtrees", "surfsup123", "chillout123", "hammock123",
-    "tanlines1", "umbrella1", "sunscreen123", "reefcoral1", "deepsea456", "undersea789", "reefshark1", "angelfish123",
-    "butterfly1", "marinelife1", "shipwreck1", "treasurer123", "piratelife1", "parrot123", "anchor789", "voyage456",
-    "compass123", "explorer1", "adventurer123", "treasure123", "archeology1", "discovery456", "fossil789",
-    "dinosaur123", "jurassic456", "extinct123", "evolution1", "ancestors123", "cavepainting1"
-]
-
+    with file_path.open('r', encoding='utf-8', errors='ignore') as file:
+        passwords = json.load(file)
+            
     # Initialize and train the Honeyword Generator
-    generator = MLHoneywordGenerator()
+    generator = MLHoneywordGenerator(passwords)
     print(generator.generate_honeywords("password123"))
+    
  
   
 
