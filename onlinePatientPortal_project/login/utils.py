@@ -71,7 +71,7 @@ class MLHoneywordGenerator:
             Save preprocessed dataset and mappings to files.
             """
             # Save mappings and metadata as JSON
-            with open(f"static/tf_resources/{self.dataset_name}", "w") as f:
+            with open(f"static/tf_resources/{self.dataset_name}.txt", "w") as f:
                 json.dump({
                     "char_to_idx": self.char_to_idx,
                     "idx_to_char": self.idx_to_char,
@@ -85,7 +85,7 @@ class MLHoneywordGenerator:
             Load preprocessed dataset and mappings from files if they exist.
             """
             try:
-                with open(f"static/tf_resources/{self.dataset_name}", "r") as f:
+                with open(f"static/tf_resources/{self.dataset_name}.txt", "r") as f:
                     mappings: dict[str, dict | int | list]  = json.load(f)
                     self.char_to_idx = mappings["char_to_idx"]
                     self.idx_to_char = {int(idx): char for idx, char in mappings["idx_to_char"].items()}

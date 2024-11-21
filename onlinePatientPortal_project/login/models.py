@@ -156,7 +156,7 @@ class HoneyPasswords(models.Model):
         verbose_name = "Honey Password"  # Singular name
         verbose_name_plural = "Honey Passwords"  # Correct plural name
         
-    index = models.OneToOneField(to=settings.AUTH_USER_MODEL, to_field= 'random_index', verbose_name=_("User"), on_delete=models.CASCADE)
+    index = models.OneToOneField(to=settings.AUTH_USER_MODEL, to_field= 'random_index', verbose_name=_("User"), on_delete=models.CASCADE, primary_key=True)
     honeyPasswords = models.JSONField(default=list)
     
     def __str__(self):
