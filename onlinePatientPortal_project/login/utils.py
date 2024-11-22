@@ -604,7 +604,7 @@ class ExistingPasswordGeneration:
                 return self.honeyword_list, sugarword_index
                     
             case 3: # Chaffing with a Password-model
-                file_path = Path.cwd() / 'login' / 'static' / 'password_list.txt'
+                file_path = Path.cwd() / 'login' / 'static' / 'password_list' / 'password_list.txt'
                # file_path = settings.BASE_DIR / 'login' / 'static' / 'password_list.txt' 
                 with file_path.open('r', encoding='utf-8', errors='ignore') as file:
                     wordlist = [line.strip() for line in file]
@@ -656,7 +656,7 @@ if __name__ == "__main__": # L3GendtyouSer4!rE4l2%7*
     
     # Temporary, reads passwordlist to pass to honeywordgenerator
     passwords = []
-    file_path = Path.cwd() / 'static' / 'phpbb-cleaned-up-listed-python.json'
+    file_path = Path.cwd() / 'static' / 'password lists' / 'phpbb-cleaned-up-listed-python.json'
     
     with file_path.open('r', encoding='utf-8', errors='ignore') as file:
         passwords = json.load(file)
