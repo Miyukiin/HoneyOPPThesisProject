@@ -20,7 +20,7 @@ from keras.src.utils.sequence_utils import pad_sequences
 from keras.src.utils import to_categorical, plot_model
 from keras.src.models import Sequential
 from keras.src.layers import LSTM, Dense, Embedding
-from keras.src.callbacks import EarlyStopping
+from keras.src.callbacks import EarlyStopping, ModelCheckpoint
 
 
 
@@ -48,7 +48,7 @@ class MLHoneywordGenerator:
         self.inp, self.out = None, None
         self.epochs = 100
         self.batch_size = 128
-        self.seed_text_length = 2 # Zero-based
+        self.seed_text_length = 3 # Zero-based, Splicing
 
         # Only prepare dataset if passwords are provided
         if password_list:
@@ -59,7 +59,7 @@ class MLHoneywordGenerator:
             self._prepare_dataset()
     
     def visualize_model(self):
-        plot_model(self.model, to_file='static/tf_resources/honey_model_architecture.png', show_shapes=True, show_layer_names=True)
+        plot_model(self.model, to_file='static/tf_resources/visualization/honey_model_architecture.png', show_shapes=True, show_layer_names=True)
 
     def _prepare_dataset(self):
         """
@@ -71,7 +71,7 @@ class MLHoneywordGenerator:
             Save preprocessed dataset and mappings to files.
             """
             # Save mappings and metadata as JSON
-            with open(f"static/tf_resources/{self.dataset_name}.txt", "w") as f:
+            with open(f"static/tf_resources/datasets/{self.dataset_name}.txt", "w") as f:
                 json.dump({
                     "char_to_idx": self.char_to_idx,
                     "idx_to_char": self.idx_to_char,
@@ -85,7 +85,7 @@ class MLHoneywordGenerator:
             Load preprocessed dataset and mappings from files if they exist.
             """
             try:
-                with open(f"static/tf_resources/{self.dataset_name}.txt", "r") as f:
+                with open(f"static/tf_resources/datasets/{self.dataset_name}.txt", "r") as f:
                     mappings: dict[str, dict | int | list]  = json.load(f)
                     self.char_to_idx = mappings["char_to_idx"]
                     self.idx_to_char = {int(idx): char for idx, char in mappings["idx_to_char"].items()}
@@ -152,10 +152,38 @@ class MLHoneywordGenerator:
         """
         if not self.model:
             raise ValueError("Model has not been built. Call build_model() first.")
-        early_stopping = EarlyStopping(monitor='loss', patience=5, restore_best_weights=True) # Define early stoppage, halt training when the validation loss stops improving.
-        self.model.fit(self.inp, self.out, epochs=self.epochs, batch_size=self.batch_size, verbose=1, callbacks=[early_stopping])
-        self.visualize_model() # Visualize Model
-        self.model.save(f"static/tf_resources/{self.version}.keras")
+        
+        # Define early stoppage, halt training when the validation loss stops improving.
+        early_stopping = EarlyStopping(
+            monitor='val_loss', 
+            patience=5, 
+            restore_best_weights=True, 
+            verbose=1) 
+        
+        # Define checkpoint callback to save the model after each epoch
+        checkpoint = ModelCheckpoint(
+            filepath=f"static/tf_resources/model_checkpoints/{self.version}_epoch{{epoch:02d}}.keras",
+            save_weights_only=False,  # Save the entire model
+            verbose=1,
+            save_freq = "epoch"
+        )
+        
+        # Training of model
+        self.model.fit(
+            self.inp, 
+            self.out, 
+            epochs=self.epochs, 
+            validation_split = 0.2,
+            batch_size=self.batch_size, 
+            verbose=1, 
+            callbacks=[early_stopping,checkpoint]
+        )
+        
+        # Visualize Model
+        self.visualize_model() 
+        
+        # Save after the entire training process finishes.
+        self.model.save(f"static/tf_resources/models/{self.version}.keras")
 
 
     def generate_honeyword(self, seed_text:str, sugarword_length:int, temperature=0.7) -> str:
@@ -173,9 +201,9 @@ class MLHoneywordGenerator:
         
         def load_model():
             try:
-                self.model = keras.models.load_model(f"static/tf_resources/{self.version}.keras")
+                self.model = keras.models.load_model(f"static/tf_resources/models/{self.version}.keras")
             except Exception as e:
-                raise Exception(f"Can not load model. (Path:static/tf_resources/{self.version}.keras) (Reason: {str(e)})")
+                raise Exception(f"Can not load model. (Path:static/tf_resources/models/{self.version}.keras) (Reason: {str(e)})")
             
         honeyword = seed_text
         
@@ -187,6 +215,7 @@ class MLHoneywordGenerator:
             predictions = self.model.predict(input_seq, verbose=0)[0]
             next_index = sample_with_temperature(predictions, temperature)
             next_char = self.idx_to_char[next_index]
+            print(next_char)
             honeyword += next_char
         return honeyword
 
@@ -633,8 +662,8 @@ if __name__ == "__main__": # L3GendtyouSer4!rE4l2%7*
         passwords = json.load(file)
             
     # Initialize and train the Honeyword Generator
-    generator = MLHoneywordGenerator(passwords)
-    print(generator.generate_honeywords("password123"))
+    generator = MLHoneywordGenerator()
+    print(generator.generate_honeywords("K1ng0ftheH1ll!@#"))
     
  
   
