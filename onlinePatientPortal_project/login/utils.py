@@ -1,18 +1,22 @@
+# Obsolete. Already migrated to own API (HoneyGeneratorAPI).The ProposedHoneywordGenerator class is unimplemented in that API though because it is unused.
+
 import random
 from Levenshtein import distance as levenshtein_distance  # Requires python-Levenshtein package
 from django.http import JsonResponse
-import numpy as np
 from nltk.corpus import wordnet as wn
 import string
 from pathlib import Path
-from django.conf import settings
 import requests
 import math
 import textdistance
 import json
-
+import time
 import numpy as np
 import os
+import sys
+
+# Now you can safely import and use settings or any other Django components
+from django.conf import settings
 
 import tensorflow as tf
 import keras
@@ -21,9 +25,6 @@ from keras.src.utils import to_categorical, plot_model
 from keras.src.models import Sequential
 from keras.src.layers import LSTM, Dense, Embedding
 from keras.src.callbacks import EarlyStopping, ModelCheckpoint
-
-
-
 
 # Run only Once for proposed method
 #import nltk 
@@ -59,7 +60,7 @@ class MLHoneywordGenerator:
             self._prepare_dataset()
     
     def visualize_model(self):
-        plot_model(self.model, to_file='static/tf_resources/visualization/honey_model_architecture.png', show_shapes=True, show_layer_names=True)
+        plot_model(self.model, to_file='login/static/tf_resources/visualization/honey_model_architecture.png', show_shapes=True, show_layer_names=True)
 
     def _prepare_dataset(self):
         """
@@ -71,7 +72,7 @@ class MLHoneywordGenerator:
             Save preprocessed dataset and mappings to files.
             """
             # Save mappings and metadata as JSON
-            with open(f"static/tf_resources/datasets/{self.dataset_name}.txt", "w") as f:
+            with open(f"/static/tf_resources/datasets/{self.dataset_name}.txt", "w") as f:
                 json.dump({
                     "char_to_idx": self.char_to_idx,
                     "idx_to_char": self.idx_to_char,
@@ -85,7 +86,7 @@ class MLHoneywordGenerator:
             Load preprocessed dataset and mappings from files if they exist.
             """
             try:
-                with open(f"static/tf_resources/datasets/{self.dataset_name}.txt", "r") as f:
+                with open(f"login/static/tf_resources/datasets/{self.dataset_name}.txt", "r") as f:
                     mappings: dict[str, dict | int | list]  = json.load(f)
                     self.char_to_idx = mappings["char_to_idx"]
                     self.idx_to_char = {int(idx): char for idx, char in mappings["idx_to_char"].items()}
@@ -162,7 +163,7 @@ class MLHoneywordGenerator:
         
         # Define checkpoint callback to save the model after each epoch
         checkpoint = ModelCheckpoint(
-            filepath=f"static/tf_resources/model_checkpoints/{self.version}_epoch{{epoch:02d}}.keras",
+            filepath=f"login/static/tf_resources/model_checkpoints/{self.version}_epoch{{epoch:02d}}.keras",
             save_weights_only=False,  # Save the entire model
             verbose=1,
             save_freq = "epoch"
@@ -183,7 +184,7 @@ class MLHoneywordGenerator:
         self.visualize_model() 
         
         # Save after the entire training process finishes.
-        self.model.save(f"static/tf_resources/models/{self.version}.keras")
+        self.model.save(f"login/static/tf_resources/models/{self.version}.keras")
 
 
     def generate_honeyword(self, seed_text:str, sugarword_length:int, temperature=0.7) -> str:
@@ -201,9 +202,9 @@ class MLHoneywordGenerator:
         
         def load_model():
             try:
-                self.model = keras.models.load_model(f"static/tf_resources/models/{self.version}.keras")
+                self.model = keras.models.load_model(f"login/static/tf_resources/models/{self.version}.keras")
             except Exception as e:
-                raise Exception(f"Can not load model. (Path:static/tf_resources/models/{self.version}.keras) (Reason: {str(e)})")
+                raise Exception(f"Can not load model. (Path:login/static/tf_resources/models/{self.version}.keras) (Reason: {str(e)})")
             
         honeyword = seed_text
         
@@ -215,7 +216,7 @@ class MLHoneywordGenerator:
             predictions = self.model.predict(input_seq, verbose=0)[0]
             next_index = sample_with_temperature(predictions, temperature)
             next_char = self.idx_to_char[next_index]
-            print(next_char)
+            # print(next_char) #Debugging
             honeyword += next_char
         return honeyword
 
@@ -604,8 +605,9 @@ class ExistingPasswordGeneration:
                 return self.honeyword_list, sugarword_index
                     
             case 3: # Chaffing with a Password-model
-                file_path = Path.cwd() / 'login' / 'static' / 'password_list' / 'password_list.txt'
-               # file_path = settings.BASE_DIR / 'login' / 'static' / 'password_list.txt' 
+                # Ensure working directory is in onlinepatientPortal_project
+                file_path = Path(r"D:\My Files (LATEST)\Coding\Django Projects\Thesis\HoneyOPPThesisProject\onlinepatientPortal_project\login\static\password lists\password_list.txt")
+                #file_path = settings.BASE_DIR / 'login' / 'static' / 'password_list.txt' 
                 with file_path.open('r', encoding='utf-8', errors='ignore') as file:
                     wordlist = [line.strip() for line in file]
                     
@@ -642,28 +644,79 @@ class ExistingPasswordGeneration:
                 return self.honeyword_list, sugarword_index
             case _:
                 raise Exception("Choose Method. Choice not in range.")
-
+        
+# Used to generate the 4 methods' 5 password 5 honeywords each
+def generate_survey_passwords_honeywords() -> dict:
+    # Structure {'method_passwords: {'password1':[honeyword,honeyword,honeyword,honeyword,honeyword]},{'password2':[honeyword,honeyword,honeyword,honeyword,honeyword]}}
+    methods_passwords_dict = {} 
+    
+    def generate_5_Juels(passwordlist, num):
+        password_honeywords_dict = {}
+        for password in passwordlist:
+            instance = ExistingPasswordGeneration(password)
+            honey_word_list, sugarindex = instance.choose_method(num)
+            password_honeywords_dict[password] = [honey_word_list, sugarindex] 
+        return password_honeywords_dict
+    
+    def generate_5_ML(passwordlist):
+        password_honeywords_dict = {}
+        for password in passwordlist:
+            instance = MLHoneywordGenerator()
+            honey_word_list, sugarindex = instance.generate_honeywords(password)
+            password_honeywords_dict[password] = [honey_word_list, sugarindex]
+        return password_honeywords_dict
             
-
+    CBTW_passwords = ["altinordu52","HPw2207!@#","MIlkSHake1","Makkadeh!@#","jeff@farm1"]
+    TAT_passwords =["riaflashmx846","1441262626027","lamurg0d694","#ector@1258","swordhunter583"]
+    CPM_passwords = ["hazo996655","th3matr1x","papa072112","dovesciare9090","EAfiGI5389"]
+    ML_passwords = ["DraiksRock251","diabolo666","letmeloveyou","password8169","rhfm281010"]
+    
+    methods_passwords_dict['CBTW'] = generate_5_Juels(CBTW_passwords, 1)
+    methods_passwords_dict['TAT'] = generate_5_Juels(TAT_passwords, 2)
+    #methods_passwords_dict['CPM'] = generate_5_Juels(CPM_passwords, 3)
+    #methods_passwords_dict['ML'] = generate_5_ML(ML_passwords)
+    
+    # Printing
+    for key1,value1 in methods_passwords_dict.items():
+        print(f'\n{key1}')
+        for key2,value2 in value1.items():
+            print(f"   {key2} -> {value2}")
+        
+        
+    
 if __name__ == "__main__": # L3GendtyouSer4!rE4l2%7*
+    
     """
     # instance = ExistingPasswordGeneration("Ryan123")
     # honey_word_list, sugarindex = instance.choose_method(1)
+    
     instance = ProposedPasswordGeneration("Ryan123")
     honey_word_list, sugarindex = instance.generate_honeyword_list()
     print(f"The honey word list is {honey_word_list}, and the sugarindex is {sugarindex}")
     """
     
+    """
     # Temporary, reads passwordlist to pass to honeywordgenerator
     passwords = []
     file_path = Path.cwd() / 'static' / 'password lists' / 'phpbb-cleaned-up-listed-python.json'
     
     with file_path.open('r', encoding='utf-8', errors='ignore') as file:
         passwords = json.load(file)
-            
-    # Initialize and train the Honeyword Generator
+    """
+    
+    """
+    # Initialize and train the ML Honeyword Generator
     generator = MLHoneywordGenerator()
-    print(generator.generate_honeywords("K1ng0ftheH1ll!@#"))
+    print(generator.generate_honeywords("K02W0wG0dD4mN"))
+    """
+    
+    # Ensure your path is in .../login
+    generate_survey_passwords_honeywords()
+    
+
+    
+    
+
     
  
   

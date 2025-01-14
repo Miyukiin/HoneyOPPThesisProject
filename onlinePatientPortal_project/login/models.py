@@ -3,10 +3,11 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, AbstractUser
 import random
 from django.contrib.auth import get_user_model
+import requests
 from .static.models_resources import AllNationalities, AllReligion
 
 from django.conf import settings
-from .utils import *
+from .utils import ExistingPasswordGeneration, ProposedPasswordGeneration, MLHoneywordGenerator
 
 # Create your models here.
 class CustomUserManager(BaseUserManager):
