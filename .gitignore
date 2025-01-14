@@ -6,12 +6,12 @@ __pycache__
 db.sqlite3
 media
 
-# Password List Ignore
-onlinePatientPortal_project/login/static/password lists/password_list.txt
-onlinePatientPortal_project/login/static/password lists/phpbb-cleaned-up.txt
+# Virtual Environment
+myenv
+myenv/
 
-# Large file ignore
-onlinePatientPortal_project/login/static/tf_resources/datasets/honeyword_dataset_phpbb.txt
+# Password List Ignore
+onlinePatientPortal_project/login/static/premigration_password_generator_resources
 
 # Database
 db.cnf
