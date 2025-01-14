@@ -1,4 +1,4 @@
-# Obsolete. Already migrated to own API (HoneyGeneratorAPI).The ProposedHoneywordGenerator class is unimplemented in that API though because it is unused.
+# Obsolete and Outdated. DO NOT USE Already migrated the updated version to own API (HoneyGeneratorAPI).The ProposedHoneywordGenerator class is unimplemented in that API though because it is unused.
 
 import random
 from Levenshtein import distance as levenshtein_distance  # Requires python-Levenshtein package
@@ -683,7 +683,6 @@ def generate_survey_passwords_honeywords() -> dict:
             print(f"   {key2} -> {value2}")
         
         
-    
 if __name__ == "__main__": # L3GendtyouSer4!rE4l2%7*
     
     """

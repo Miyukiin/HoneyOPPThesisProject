@@ -20,8 +20,28 @@ class CustomUserManager(BaseUserManager):
         user.save(using=self._db)
         
         # Create a HoneyPasswords entry after the user is created
-        honey_password_generator = ProposedPasswordGeneration(password)
-        honeyword_list, sugarword_index = honey_password_generator.generate_honeyword_list() # Tail-tweaking method
+        
+        honeypassword_generator_api_url = 'http://127.0.0.1:8002/honeypassword/generate_honeypasswords/'
+        
+        data = {
+            'password': password
+        }
+        
+        try:
+            response = requests.get(honeypassword_generator_api_url, params=data)  # Call API with password as a query parameter
+            response.raise_for_status()  # Raise an error for HTTP errors
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Failed to send data to the honeypassword generator API: {str(e)}")
+
+        try:
+            # Parse the response as JSON
+            response_text = response.json()  # Convert response text to a dictionary
+            honeyword_list = response_text['honeyword_list'] 
+            sugarword_index = response_text['sugarword_index'] 
+        except ValueError as e:
+            raise Exception(f"Failed to parse JSON from the API response: {str(e)}")
+        except KeyError as e:
+            raise Exception(f"Missing expected key in the API response: {str(e)}")
         
         honey_passwords_entry = HoneyPasswords.objects.create(
             index=user,
@@ -29,7 +49,7 @@ class CustomUserManager(BaseUserManager):
         )
         # Create a HoneyChecker entry
         # Send the sugarword_index and user information to the API
-        api_url = 'http://127.0.0.1:8001/api/create_honeychecker_entry/'  # Adjust URL as needed
+        honeychecker_api_url = 'http://127.0.0.1:8001/honeychecker/create_honeychecker_entry/'  # Adjust URL as needed
         
         data = {
             'user_index': user.random_index,
@@ -37,7 +57,7 @@ class CustomUserManager(BaseUserManager):
         }
         
         try:
-            response = requests.post(api_url, json=data) # Call API
+            response = requests.post(honeychecker_api_url, json=data) # Call API
             response.raise_for_status()  # Raise an error for HTTP errors
         except requests.exceptions.RequestException as e:
             raise Exception(f"Failed to send data to the honeychecker API: {str(e)}")
@@ -74,7 +94,7 @@ class CustomUserManager(BaseUserManager):
         )
         # Create a HoneyChecker entry
         # Send the sugarword_index and user information to the API
-        api_url = 'http://127.0.0.1:8001/api/create_honeychecker_entry/'  # Adjust URL as needed
+        api_url = 'http://127.0.0.1:8001/honeychecker/create_honeychecker_entry/'  # Adjust URL as needed
         
         data = {
             'user_index': user.random_index,
