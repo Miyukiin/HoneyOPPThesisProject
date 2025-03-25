@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout, get_user_model
+from rest_framework.decorators import api_view
 
 from .models import *
 from .forms import *
@@ -12,7 +13,6 @@ from .utils import *
 
 
 # Create your views here.
-
 def login_view(request: HttpRequest):
     context = {}
     if request.user.is_authenticated:
@@ -30,6 +30,7 @@ def login_view(request: HttpRequest):
             # If there is a user with this username.
             if user is not None:
                 login(request, user) 
+                request.session['user_password'] = password # Store for dashboard_view purposes
                 
                 # If Genuine user then Lead to Genuine Environment
                 if getattr(user, 'is_genuine', False):
@@ -93,6 +94,55 @@ def dashboard_view(request:HttpRequest):
         user = None  # Handle the case where the user is not found
     except get_user_model().MultipleObjectsReturned:
         user = None  # Handle the case where multiple users are found
+        
+    # Hash Password
+    try:
+        honeypassword_hasher_api_url = 'http://127.0.0.1:8002/honeypassword/hash_honeypasswords/'
+        honey_password_query = HoneyPasswords.objects.get(index= user)
+        data = {
+            "honeyword_list": [request.session.get('user_password')], 
+            "salt": honey_password_query.salt
+        }
+        
+        try:
+            response = requests.post(honeypassword_hasher_api_url, json=data)  # Call API with honeywordlist as honeywords
+            
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Failed to send data to the honeypassword hasher API: {str(e)}")
+        
+        response_text = response.json()
+        honeyhash_list:list[str] = response_text['honeyword_hashes'] 
+        
+    except Exception as e:
+            # Return error response
+            return JsonResponse({"error": f"Unable to hash honeypasswords: {str(e)}"}, status=500)
+        
+    # Decrypt DTE Seed
+    try:
+        honeydecrypt_seed_api_url = 'http://127.0.0.1:8002/honeydistributive/decrypt_dte_seeds/'  # Adjust URL as needed
+        seed_query = EncryptedSeed.objects.get(index = user)
+
+        data = {
+            'rbmrsa_parameters': seed_query.rbmrsa_parameters,
+            'password_hash': honeyhash_list[0],
+            'encrypted_seed': seed_query.ciphertext,
+        }
+        
+        try:
+            response = requests.post(honeydecrypt_seed_api_url, json=data) # Call API
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Failed to send data to the honeygenerator API: {str(e)}")
+        
+        response_text = response.json()
+        dte_seeds = response_text['dte_seeds']
+        
+    except Exception as e:
+        # Return error response
+        return JsonResponse({"error": f"Unable to decrypt dte seed: {str(e)}"}, status=500)
+    
+    # Decode DTE Seed to Messages
+    #
+    #
 
     if is_genuine:
         if user:
@@ -143,7 +193,6 @@ def dashboard_view(request:HttpRequest):
             'environment': "Fictitious" 
         }
         
-    
     return render(request, 'index.html', context)
 
 @login_required

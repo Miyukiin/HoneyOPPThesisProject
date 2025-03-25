@@ -66,15 +66,7 @@ class UserGeneralInformationForm(forms.ModelForm):
         fields = '__all__'
         exclude = ['index']
         widgets = {
-            'isAmericanIndian': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
-            'isAsian': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
-            'isBlack': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
-            'isHispanic': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
-            'isWhite': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
-            'isNativeHawaiian': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
-            'isChild': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
             'isNonLocal': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
-            'isHospitalEmp': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
             'isNoPersonalDataRelease': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
             'isNoCompanyCommunication': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
             'isConfidentialPatientRecord': forms.CheckboxInput(attrs={'class': 'checkbox-class'}),
@@ -88,14 +80,11 @@ class UserGeneralInformationForm(forms.ModelForm):
         
         self.first_column_fields = [self[field] for field in [
             'first_name', 'middle_name', 'last_name', 'suffix_name', 'civil_status', 'sex', 'nationality', 
-            'religion', 'philID', 'sss_number', 'passport_number', 'citizenship', 'company', 
-            'company_address', 'occupation'
+            'religion', 'philID', 'sss_number', 'passport_number', 'occupation'
         ]]
         
         self.second_column_fields = [self[field] for field in [
-            'birth_date', 'age', 'remarks', 'isAmericanIndian', 'isAsian', 
-            'isBlack', 'isHispanic', 'isWhite', 'isNativeHawaiian', 'isChild', 'isNonLocal', 
-            'isHospitalEmp', 'isNoPersonalDataRelease', 'isNoCompanyCommunication', 
+            'birth_date', 'race', 'isNonLocal', 'isNoPersonalDataRelease', 'isNoCompanyCommunication', 
             'isConfidentialPatientRecord'
         ]]
 
