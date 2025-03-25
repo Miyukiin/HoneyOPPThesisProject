@@ -11,6 +11,8 @@ from .utils import ExistingPasswordGeneration, ProposedPasswordGeneration, MLHon
 
 # Create your models here.
 class CustomUserManager(BaseUserManager):
+    # from django.contrib.auth import get_user_model
+    #  user = get_user_model().objects.create_user(username=username, email=email, password=password)
     def create_user(self, username, password=None, **kwargs):
         if not username:
             raise ValueError('The Username field must be set')
@@ -88,8 +90,8 @@ class CustomUserManager(BaseUserManager):
         # But it only prompts for the username, then goes straight to the above error.
         # So I provided a default positional argument value so it works.
         
-        # from your_app.models import CustomUser
-        # CustomUser.objects.create_superuser(username='admin', password='adminpassword', email='admin@example.com')
+        # from login.models import CustomUser
+        # CustomUser.objects.create_superuser(username='admin123', password='adminpassword123', email='admin@example.com')
         kwargs.setdefault('is_staff', True)
         kwargs.setdefault('is_superuser', True)
         
@@ -98,17 +100,54 @@ class CustomUserManager(BaseUserManager):
         
         user = self.model(username=username, **kwargs)
         
-       # Create User, Create HoneyPasswords Entry, Create HoneyPassword API Check Entry
+        # Create User, Create HoneyPasswords Entry, Create HoneyPassword API Check Entry
         user.save(using=self._db)
         
         # Create a HoneyPasswords entry after the user is created
-        honey_password_generator = ExistingPasswordGeneration(password)
-        honeyword_list, sugarword_index = honey_password_generator.choose_method(1) # Tail-tweaking method
+        honeypassword_generator_api_url = 'http://127.0.0.1:8002/honeypassword/generate_honeypasswords/'
+        
+        data = {
+            'password': password
+        }
+        
+        try:
+            response = requests.get(honeypassword_generator_api_url, params=data)  # Call API with password as a query parameter
+            response.raise_for_status()  # Raise an error for HTTP errors
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Failed to send data to the honeypassword generator API: {str(e)}")
+        
+        try:
+            # Parse the response as JSON
+            response_text = response.json()  # Convert response text to a dictionary
+            honeyword_list = response_text['honeyword_list'] 
+            sugarword_index = response_text['sugarword_index']
+            
+            # Hash Honey Passwords
+            honeypassword_hasher_api_url = 'http://127.0.0.1:8002/honeypassword/hash_honeypasswords/'
+            
+            data = {"honeyword_list": honeyword_list}
+            
+            try:
+                response = requests.post(honeypassword_hasher_api_url, json=data)  # Call API with honeywordlist as honeywords
+                response.raise_for_status()  # Raise an error for HTTP errors
+            except requests.exceptions.RequestException as e:
+                raise Exception(f"Failed to send data to the honeypassword hasher API: {str(e)}")
+            
+            response_text = response.json()
+            honeyhash_list = response_text['honeyword_hashes'] 
+            salt = response_text['salt']
+    
+        except ValueError as e:
+            raise Exception(f"Failed to parse JSON from the API response: {str(e)}")
+        except KeyError as e:
+            raise Exception(f"Missing expected key in the API response: {str(e)}")
         
         honey_passwords_entry = HoneyPasswords.objects.create(
             index=user,
-            honeyPasswords=honeyword_list
+            honeyPasswords=honeyhash_list,
+            salt = salt
         )
+        
         # Create a HoneyChecker entry
         # Send the sugarword_index and user information to the API
         api_url = 'http://127.0.0.1:8001/honeychecker/create_honeychecker_entry/'  # Adjust URL as needed
