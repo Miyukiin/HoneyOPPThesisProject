@@ -198,3 +198,39 @@ h1,h2,h3,p{
         font-size: 12px;
     }
 }
+
+.form-class input,
+.form-class select,
+.form-class textarea {
+    width: 70%;                  /* Take full column width */
+    height: 38px;                 /* Uniform height for all fields */
+    padding: 0.5em;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+    box-sizing: border-box;
+}
+
+/* Keep checkboxes smaller and inline */
+.form-class input[type="checkbox"] {
+    width: auto;
+    height: auto;
+}
+
+/* Ensure .column takes 50% width of grid */
+.column {
+    width: 100%;
+}
+
+/* Standard spacing for form groups */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-class label {
+    display: block;
+    margin-bottom: 0.3em;
+    font-weight: bold;
+    color: var(--text-color);
+}

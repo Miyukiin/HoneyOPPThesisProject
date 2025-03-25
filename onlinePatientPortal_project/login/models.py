@@ -44,6 +44,7 @@ class CustomUserManager(BaseUserManager):
             honeypassword_hasher_api_url = 'http://127.0.0.1:8002/honeypassword/hash_honeypasswords/'
             
             data = {"honeyword_list": honeyword_list}
+            print(data)
             
             try:
                 response = requests.post(honeypassword_hasher_api_url, json=data)  # Call API with honeywordlist as honeywords
@@ -53,6 +54,7 @@ class CustomUserManager(BaseUserManager):
             
             response_text = response.json()
             honeyhash_list = response_text['honeyword_hashes'] 
+            print(response_text)
             salt = response_text['salt']
     
         except ValueError as e:
