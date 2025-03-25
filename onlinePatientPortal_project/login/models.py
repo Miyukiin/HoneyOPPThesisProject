@@ -38,6 +38,22 @@ class CustomUserManager(BaseUserManager):
             response_text = response.json()  # Convert response text to a dictionary
             honeyword_list = response_text['honeyword_list'] 
             sugarword_index = response_text['sugarword_index'] 
+            
+            # Hash Honey Passwords
+            honeypassword_hasher_api_url = 'http://127.0.0.1:8002/honeypassword/hash_honeypasswords/'
+            
+            data = {"honeyword_list": honeyword_list}
+            
+            try:
+                response = requests.post(honeypassword_hasher_api_url, json=data)  # Call API with honeywordlist as honeywords
+                response.raise_for_status()  # Raise an error for HTTP errors
+            except requests.exceptions.RequestException as e:
+                raise Exception(f"Failed to send data to the honeypassword hasher API: {str(e)}")
+            
+            response_text = response.json()
+            honeyhash_list = response_text['honeyword_hashes'] 
+            salt = response_text['salt'] 
+    
         except ValueError as e:
             raise Exception(f"Failed to parse JSON from the API response: {str(e)}")
         except KeyError as e:
@@ -45,7 +61,8 @@ class CustomUserManager(BaseUserManager):
         
         honey_passwords_entry = HoneyPasswords.objects.create(
             index=user,
-            honeyPasswords=honeyword_list
+            honeyPasswords=honeyhash_list,
+            salt = salt
         )
         # Create a HoneyChecker entry
         # Send the sugarword_index and user information to the API
@@ -179,6 +196,7 @@ class HoneyPasswords(models.Model):
         
     index = models.OneToOneField(to=settings.AUTH_USER_MODEL, to_field= 'random_index', verbose_name=_("User"), on_delete=models.CASCADE, primary_key=True)
     honeyPasswords = models.JSONField(default=list)
+    salt = models.CharField(_("Salt"), max_length=20, unique=False, blank= False, null= True)
     
     def __str__(self):
         try:
