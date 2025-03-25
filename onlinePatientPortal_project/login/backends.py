@@ -10,12 +10,14 @@ class HoneywordBackend(BaseBackend):
             user:object = User.objects.get(username=username)
             hp_query:object = HoneyPasswords.objects.get(index_id=user.random_index)
             password_list:list = hp_query.honeyPasswords
+            salt:str = hp_query.salt
             
             api_url = 'http://127.0.0.1:8001/honeychecker/verify/' # LocalHost of api service running on port 8001 in the specified url.
             data = {
                 'user_index': user.random_index,
                 'password_candidate': password,
-                'password_list': password_list
+                'password_list': password_list,
+                'salt': salt
             }
             
             try:

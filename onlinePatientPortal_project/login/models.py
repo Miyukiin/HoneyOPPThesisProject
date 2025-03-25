@@ -37,7 +37,7 @@ class CustomUserManager(BaseUserManager):
             # Parse the response as JSON
             response_text = response.json()  # Convert response text to a dictionary
             honeyword_list = response_text['honeyword_list'] 
-            sugarword_index = response_text['sugarword_index'] 
+            sugarword_index = response_text['sugarword_index']
             
             # Hash Honey Passwords
             honeypassword_hasher_api_url = 'http://127.0.0.1:8002/honeypassword/hash_honeypasswords/'
@@ -52,7 +52,7 @@ class CustomUserManager(BaseUserManager):
             
             response_text = response.json()
             honeyhash_list = response_text['honeyword_hashes'] 
-            salt = response_text['salt'] 
+            salt = response_text['salt']
     
         except ValueError as e:
             raise Exception(f"Failed to parse JSON from the API response: {str(e)}")
@@ -196,7 +196,7 @@ class HoneyPasswords(models.Model):
         
     index = models.OneToOneField(to=settings.AUTH_USER_MODEL, to_field= 'random_index', verbose_name=_("User"), on_delete=models.CASCADE, primary_key=True)
     honeyPasswords = models.JSONField(default=list)
-    salt = models.CharField(_("Salt"), max_length=20, unique=False, blank= False, null= True)
+    salt = models.CharField(_("Salt"), max_length=100, unique=False, blank= False, null= True)
     
     def __str__(self):
         try:
